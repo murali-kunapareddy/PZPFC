@@ -1,0 +1,11 @@
+﻿@using PFCWebAPP.Repositories.Configure.Models;
+@model TemplateModel
+
+@if (Model != null && Model.ColumnMisMatchDataInfo != null)
+{
+    <br />
+    <br />
+    @Html.Raw(Model.ColumnMisMatchDataInfo.ToString())
+}
+
+

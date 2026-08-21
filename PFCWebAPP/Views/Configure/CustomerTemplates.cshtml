@@ -1,0 +1,501 @@
+﻿@{
+    ViewData["Title"] = "Customer Templates";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@using PFCWebAPP.Repositories.Configure.Models
+@model ReportContentViewModel
+
+<div id="divTemplateDetails">
+    <div class="container pb-4 justify-content-between">
+        <div class="col-md-10">
+            <h2>Customer Templates</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <label class="mb-2" style="font-size: 15px;font-weight: 600;">Select Customer Template</label>
+                @Html.DropDownListFor(m => m.templateModel.SelectedTemplateMasterID, new SelectList(Model.templateModel.ddlTemplateMasterDetails, "TemplateMasterID", "TemplateName"), "[Choose Template]", new { @class = "form-select", @id = "ddlTemplateMasterID" })
+            </div>
+            <div class="col-md-6">
+                <button class="btn btn-primary mt-4" id="newBtn">Add New</button>
+                <button class="btn btn-primary mt-4" id="deleteBtn">Delete Template</button>
+                <button class="btn btn-primary mt-4" id="custTemplateDwnloadBtn">Download</button>
+
+            </div>
+        </div>
+
+        <br />
+
+        <div id="processOverlay" class="overlay">
+            <div class="text-hole-center">
+                <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+            </div>
+        </div>
+
+        <div class="container" id="innerDiv">
+            @Html.Partial("_GetTemplateDetailsByID", Model.templateModel)
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addNewCustomerTemplateModal" tabindex="-1" aria-labelledby="addNewCustTemplateLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNewCustTemplateLabel"><Strong>Add Customer Template</Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="CloseModal"></button>
+            </div>
+            <div class="modal-body " id="add-modal-body">
+                @using (Html.BeginForm("CustomerTemplates", "Configure", FormMethod.Post, new { @class = "form-horizontal", role = "form", @id = "customerTemplate" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="panel panel-danger" id="divError" style="display:none">
+                                <div class="panel-heading">
+                                    <span class="panel-title">Ooops! Please watch out...</span>
+                                </div>
+                                <div class="panel-body text-danger" id="divErrorlist" style="padding-left:20px;">
+                                    @Html.ValidationSummary("", new { @id = "sumError", @class = "text-danger" })
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label for="sesaId">Name<sup class="text-danger">*</sup></label>
+                            @Html.TextBoxFor(m => m.TemplateName, new { @class = "form-control", @id = "TemplateName", placeholder = "Enter Template Name" ,Name = "TemplateName"})
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label for="sesaId">Country Code<sup class="text-danger">*</sup> </label>
+                            @Html.DropDownListFor(m => m.CountryCode, new SelectList(Model.DrpCountryCodes, "CountryCode", "CountryCode"), "[Choose CountryCode]", new { @class = "form-control", @id = "ddlCountryCode",Name = "CountryCode" })
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <div class="form-group col-lg-4">
+                    <input class="btn btn-primary float-right" type="submit" name="button" value="Save" id="btnSave" />
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="saveSuccess" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.CustomerTemplateSaved
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" id="saveSuccessOKBtn" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"><Strong>Delete Template</Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.CustomerTemplateDeleteConformation
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" id="deleteYes" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteSuccess" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.CustomerTemplateDelete
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary" id="deleteOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="enableDeletedTemplate" tabindex="-1" aria-labelledby="enableDeletedTemplateLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="enableDeletedTemplateLabel"><Strong>Enable Customer Template</Strong></h5>
+            </div>
+            <div class="modal-body" id="my-modal-body"></div>
+            <div class="modal-footer">
+                <form>
+                    <button type="button" class="btn btn-success" id="enableTemplate">Yes</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="disableTemplate">No</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="tempExistsInOrg" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tempExistsInOrgLabel"></h5>
+            </div>
+            <div class="modal-body" id="tempExistsModalBody">
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary" id="tempExistsOKBtn">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        //to hide buttons on pageload
+        $("#innerDiv").hide();
+        $("#processOverlay").css("width", "100%");
+
+        $("#addNewCustomerTemplateModal").modal({
+            show: false,
+            backdrop: 'static'
+        });
+        $("#deleteConfirmationModal").modal({
+            show: false,
+            backdrop: 'static'
+        });
+
+        $("#deleteSuccess").modal({
+            show: false,
+            backdrop: 'static'
+        });
+
+        $("#enableDeletedTemplate").modal({
+            show: false,
+            backdrop: 'static'
+        });
+
+        $("#tempExistsInOrg").modal({
+            show: false,
+            backdrop: 'static'
+        });
+
+
+
+        $("#deleteBtn").attr('disabled', true);
+        $("#custTemplateDwnloadBtn").attr('disabled', true);
+        //to load templates data into dropdown
+        GetTemplatesOnLoad();
+
+        var selectedTemplateId = $("#ddlTemplateMasterID").val();
+        if (selectedTemplateId != null && selectedTemplateId != '') {
+            $("#deleteBtn").attr('disabled', false);
+            $("#custTemplateDwnloadBtn").attr('disabled', false);
+            GetTemplateDetailsByID(selectedTemplateId);
+        }
+
+
+        //dropdown change event
+        $("#ddlTemplateMasterID").change(function () {
+            var selectedTemplateId = $("#ddlTemplateMasterID").val();
+            if (selectedTemplateId == '' || selectedTemplateId == '[Choose Template]') {
+                $("#deleteBtn").attr('disabled', true);
+                $("#custTemplateDwnloadBtn").attr('disabled', true);
+                $("#innerDiv").hide();
+            }
+            else {
+                $("#deleteBtn").attr('disabled', false);
+                $("#custTemplateDwnloadBtn").attr('disabled', false);
+                GetTemplateDetailsByID(selectedTemplateId);
+            }
+        });
+
+        //show popup on add button click
+        $("#newBtn").click(function () {
+            $("#addNewCustomerTemplateModal").modal('show');
+        });
+
+        //save report content
+        $("#btnSave").click(function () {
+            if ($("#divError #divErrorlist #sumError").length <= 0) {
+                $("#divErrorlist").html("<div class=\"text-danger validation-summary-errors\" data-valmsg-summary=\"true\" id=\"sumError\"><ul><li style=\"display:none\"></li></ul></div>");
+            }
+            $.validator.unobtrusive.parse($('#customerTemplate'))
+            $("#customerTemplate").validate({
+                focusInvalid: false,
+                errorLabelContainer: $("#customerTemplate div.sumError")
+            });
+
+            if (!$('#customerTemplate').valid()) {
+                var error = "";
+                $("#sumError ul li").each(function () {
+
+                    var data = $(this).text();
+                    $(this).replaceWith(data);
+                    error = error + "<li>" + data.replace(':', '') + "</li>";
+                });
+                error = "<ul>" + error + "</ul>";
+
+                $("#sumError").replaceWith(error);
+
+                $("#divError").show();
+                $("#btnSave").removeClass("disabled");
+
+                $('#divError').focus();
+                window.scrollTo(0, 0);
+            }
+            else {
+                $("#divError").hide();
+                checkIfTemplateIsDeleted();
+            }
+        });
+
+
+
+        $("#CloseModal").click(function () {
+            $("#TemplateName").val('');
+            $("#ddlCountryCode").val('');
+            $("#divError").hide();
+        });
+
+        $("#deleteBtn").click(function () {
+            $("#deleteConfirmationModal").modal('show');
+        });
+
+        $("#deleteYes").click(function () {
+            var TemplateMasterId = $("#ddlTemplateMasterID").val();
+            $.ajax({
+                url: '@Url.Action("DeleteTemplateMaster", "Configure")',
+                data: { TemplateMasterID: TemplateMasterId },
+                datatype: JSON,
+                type: 'POST',
+                onLoading: $("#processOverlay").css("width", "100%"),
+                success: function (data) {
+                    if (data == true) {
+                        $("#processOverlay").css("width", "0%");
+                        $("#deleteSuccess").modal('show');
+                        $("#deleteConfirmationModal").modal('hide');
+                    }
+                },
+                error: function (data) {
+                    $("#processOverlay").css("width", "0%");
+                    //alert(data);
+                    console.log(data);
+                    //location.reload(true);
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        });
+
+        $("#deleteOkBtn").click(function () {
+            location.reload(true);
+        });
+
+        $('#tempExistsOKBtn').click(function () {
+            $("#TemplateName").val('');
+        });
+
+        $('#disableTemplate').click(function () {
+            $("#TemplateName").val('');
+            $("#ddlCountryCode").val('');
+        });
+
+        $('#enableTemplate').click(function () {
+            var formData = $("#customerTemplate").serializeArray();
+            var templatename = formData[0].value;
+            var countrycode = formData[1].value;
+            $.ajax({
+                url: '@Url.Action("ReActivateTemplate","Configure")',
+                data: { TemplateName: templatename, CountryCode: countrycode },
+                datatype: JSON,
+                type: 'POST',
+                success: function (data) {
+                    if (data > 0) {
+                        $("#enableDeletedTemplate").modal('hide');
+                        $("#addNewCustomerTemplateModal").modal('hide');
+                        $("#TemplateName").val('');
+                        $("#ddlCountryCode").val('');
+                        ReAssignTemplateMasterId(data, templatename, countrycode);
+                    }
+                },
+                error: function (data) {
+                    //alert(data);
+                    console.log(data);
+                    //location.reload(true);
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        });
+    });
+
+    function SaveReportContent() {
+        var formData = $("#customerTemplate").serializeArray();
+        var templatename = formData[0].value;
+        var countrycode = formData[1].value;
+        $.ajax({
+            url: '@Url.Action("AddCustomerTemplate" , "Configure")',
+            data: { TemplateName: templatename, CountryCode: countrycode },
+            datatype: JSON,
+            success: function (data) {
+                if (data != 0) {
+                    $("#addNewCustomerTemplateModal").modal('hide');
+                    $("#TemplateName").val('');
+                    $("#ddlCountryCode").val('');
+                    $("#btnSave").removeClass("disabled");
+                    $("#saveSuccess").modal('show');
+                    ReAssignTemplateMasterId(data, templatename, countrycode);
+                }
+            },
+            error: function (data) {
+                //alert("error");
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    };
+
+    function ReAssignTemplateMasterId(data, templatename, countrycode) {
+        var ddlTemplateMasterID = $('#ddlTemplateMasterID');
+        ddlTemplateMasterID.append($("<option></option>").val(data).html(templatename + " - " + countrycode));
+        $('#ddlTemplateMasterID').val(data).attr("selected", "selected");
+        $("#deleteBtn").attr('disabled', false);
+        $("#custTemplateDwnloadBtn").attr('disabled', false);
+        GetTemplateDetailsByID(data);
+    };
+
+    function GetTemplateDetailsByID(templateID) {
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("_GetTemplateDetailsByID" , "Configure")',
+            data: { TemplateMasterID: templateID },
+            datatype: JSON,
+            beforeSend: function () {
+                $("#processOverlay").css("width", "100%");
+            },
+            onLoading: $("#processOverlay").css("width", "100%"),
+            success: function (data) {
+                $("#innerDiv").html(data);
+                $("#innerDiv").show();
+                var tableData = $("#tblTemplateDataDromDB tbody tr:first").find("td:first").text();
+                if (tableData == "No Data Found") {
+                    $("#custTemplateDwnloadBtn").attr('disabled', true);
+                } else {
+                    $("#custTemplateDwnloadBtn").attr('disabled', false);
+                }
+                $("#processOverlay").css("width", "0%");
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                //alert('error');
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    };
+
+    function GetTemplatesOnLoad() {
+        $.ajax({
+            url: '@Url.Action("ReportContent","Configure")',
+            type: 'Get',
+            data: {},
+            datatype: JSON,
+            success: function (data) {
+                $("#processOverlay").css("width", "0%");
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    };
+
+    function checkIfTemplateIsDeleted() {
+        var formData = $("#customerTemplate").serializeArray();
+        var templatename = formData[0].value;
+        var countrycode = formData[1].value;
+        $.ajax({
+            url: '@Url.Action("IsTemplateDeleted","Configure")',
+            data: { TemplateName: templatename, CountryCode: countrycode },
+            datatype: JSON,
+            type: 'POST',
+            onLoading: $("#processOverlay").css("width", "100%"),
+            success: function (data) {
+                if (data == 3) {
+                    $("#btnSave").addClass("disabled");
+                    SaveReportContent();
+                }
+                if (data == 2) {
+                    var cur_text = "<b>" + templatename.toUpperCase() + "</b>" + ' @PFCWebAPP.Utilities.AppConfig.TemplateExistInOrganisationTryNewName';
+                    var new_text = cur_text;
+                    $('#tempExistsModalBody').empty();
+                    $('#tempExistsModalBody').html(new_text);
+                    $("#tempExistsInOrg").modal('show');
+                }
+                if (data == 1) {
+                    var cur_text = '@PFCWebAPP.Utilities.AppConfig.TemplateReActive1 ' + templatename.toUpperCase()
+                   
+                   
+                    var new_text = cur_text 
+                    $('#my-modal-body').empty();
+                    $('#my-modal-body').html(new_text);
+                    $("#enableDeletedTemplate").modal('show');
+                }
+                $("#processOverlay").css("width", "0%");
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    };
+
+    $("#custTemplateDwnloadBtn").click(function () {
+        $("#custTemplateDwnloadBtn").attr('disabled', true);
+        var selectedTemplateId = $("#ddlTemplateMasterID option:selected").val();
+        var TemplateName = $("#ddlTemplateMasterID option:selected").text().split('-')[0];
+        downalodTemplateParams = {
+            TemplateMasterID: selectedTemplateId, TemplateName: TemplateName
+        };
+        $("#processOverlay").css("width", "100%");
+        DownloadCustomerTemplate(downalodTemplateParams);
+    });
+
+    function DownloadCustomerTemplate(data) {
+        var recordsCount = $("#dataTablerecordsCount").text();
+        var multiplicationValue = Math.floor(recordsCount / 10000);
+        var timeOutValue = 3;
+        if (multiplicationValue > 1) {
+            timeOutValue = multiplicationValue * timeOutValue;
+        }
+        window.location.href = "@Url.RouteUrl(new { Controller = "Configure", Action = "Export" })/?TemplateMasterID=" + data.TemplateMasterID + "&TemplateName=" + data.TemplateName;
+        setTimeout(function () {
+            $("#processOverlay").css("width", "0%");
+        }, timeOutValue * 1000);
+        $("#custTemplateDwnloadBtn").attr('disabled', false);
+    }
+</script>
+

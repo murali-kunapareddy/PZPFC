@@ -1,0 +1,87 @@
+﻿
+@{
+    ViewData["Title"] = "Trade List Formats";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using PFCWebAPP.Repositories.Configure.Models
+@model ReportFormatTemplateModel
+
+<div class="container pb-4 justify-content-between">
+    <div class="col-md-10">
+        <h2>Trade List Formats</h2>
+    </div>
+    <form asp-controller="Configure" asp-action="LoadDataById" method="post">
+        <div class="row">
+            <div class="col-md-4">
+                <label asp-for="SelectedReportFormatTempMasterID" class="mb-2">Select Trade List Format</label>
+                <select asp-for="SelectedReportFormatTempMasterID" asp-items="Model.ReportFormats" class="form-control" id="drpReportFormat">
+                    <option value="0" disabled>Choose Template</option>
+                </select>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="processOverlay" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+<div class="container" id="innerDiv">
+    <partial name="_ViewReportFormatDataById"/>
+</div>
+
+
+<script type="text/javascript">
+    let gridApi;
+    $(function() {
+        $("#innerDiv").hide();
+        $("#processOverlay").css("width", "0%")
+
+        var SelectedReportId = $('#drpReportFormat').val();
+        if (SelectedReportId != null){
+            GetTemplateDataById(SelectedReportId);
+        }
+
+        $('#drpReportFormat').change(function (){
+            $("#processOverlay").css("width", "100%")
+            var SelectedReportId = $('#drpReportFormat').val();
+            GetTemplateDataById(SelectedReportId);
+        });
+
+    });
+
+    function GetTemplateDataById(SelectedReportId) {
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("_ViewReportFormatDataById" , "Configure")',
+            data: { ReportFormatMasterId: SelectedReportId },
+            datatype: JSON,
+            beforeSend: function () {
+                $("#processOverlay").css("width", "100%");
+                $("#innerDiv").hide();
+            },
+            onLoading: $("#processOverlay").css("width", "100%"),
+            success: function (data) {
+                $("#innerDiv").html(data);
+                $("#innerDiv").show();
+                $("#processOverlay").css("width", "0%");
+                
+                setTimeout(function () {
+                    gridApi.sizeColumnsToFit();
+                });
+
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%")
+                //alert('error');
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    }
+</script>
+

@@ -1,0 +1,82 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="appspec.yml" />
+    <None Remove="Scripts\start-iis-website.ps1" />
+    <None Remove="Scripts\stop-iis-website.ps1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appspec.yml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\start-iis-website.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\stop-iis-website.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EFCore.BulkExtensions" Version="6.8.1" />
+    <PackageReference Include="JWT" Version="9.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Xml.Extensions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="6.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.14" />
+    <PackageReference Include="NLog.Database" Version="5.2.0" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.0" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.2" />
+    <PackageReference Include="NPOI" Version="2.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="PingComponent">
+      <HintPath>DLLS\PingComponent.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+    <Folder Include="wwwroot\PFCDownloadedFiles\" />
+    <Folder Include="wwwroot\TemplateFiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExcelUploadValidator\ExcelUploadValidator.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="DatabaseContext\Scripts\PFCScripts.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="DatabaseContext\Scripts\USPT_MasterTableKeysCreate.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="DatabaseContext\Scripts\USPT_MasterTableKeysRemove.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="DatabaseContext\Scripts\USPT_NotNullMasterTableKeyFieldsCreate.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="DatabaseContext\Scripts\USPT_NotNullMasterTableKeyFieldsRemove.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties wwwroot_4lib_4bootstrap_4dist_4css_4bootstrap-grid_1css_1map__JsonSchema="" /></VisualStudio></ProjectExtensions>
+
+</Project>

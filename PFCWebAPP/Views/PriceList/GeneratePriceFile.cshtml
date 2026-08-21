@@ -1,0 +1,1667 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Price List Generation";
+}
+
+@using PFCWebAPP.Repositories.PriceList.Models
+@model ProcessBar
+
+<div class="container">
+    @*  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/Home">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Price List Generation</li>
+    </ol>
+    </nav>*@
+    <h2>Price List Generation</h2>
+    @* <button onclick="checkqueryPriceList()">click</button>*@
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="col-lg-12 d-flex">
+                <div class="form-group col-lg-6 d-flex">
+                    <div class="col-lg-5 d-flex align-items-center">
+                        @*<sup class="text-danger" style="font-size:14px">*</sup>*@
+                        <label for="userLevel"><strong>Sales Organization</strong></label>
+                    </div>
+                    <div class="col-lg-6">
+                        <select class="form-control" id="orgLevel">
+                            <option value="0">Select</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="org_val" />
+                </div>
+                <div class="col-lg-6 text-end">
+                    <input type="text" hidden id="maxCustomersCount">
+                    <button class="btn btn-secondary me-2 clear-list" rippleEffect type="button" style="min-width:5rem!important">Clear</button>
+                    <button class="btn btn-primary cleartablefilters" id="listCustomersPopup" rippleEffect data-bs-toggle="modal" data-bs-target="#exampleModal" style="min-width:5rem!important">List</button>
+                    <button class="btn btn-primary" id="addClientToList" rippleEffect data-bs-toggle="modal" style="min-width:5rem!important">Add Customer</button>
+                </div>
+            </div>
+            <div id="myGrid" style="height: 215px; width:100%;" class="ag-theme-alpine"></div>
+        </div>
+        <div class="col-lg-6">
+            <div class="form-group col-lg-12 justify-content-end d-flex generate-button-top">
+                <button class="btn btn-primary p-3 w-50" rippleEffect type="button" id="btn_GeneratePrice" onclick="handleGeneratePriceClick()"><strong>GENERATE PRICE LIST(S)</strong></button>
+            </div>
+            <div class="row ms-5" id="discountBinding">
+            </div>
+            <div class="form-group col-lg-12 ms-5">
+                <div class="check-controls">
+                    <label class=" me-3 d-flex align-items-center">Use Global COS/Product Hirearchy</label>
+                    <label class="switch">
+                        <input type="checkbox" id="chk_toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <label class="ms-3 d-flex align-items-center">Use Local COS/Product Hirearchy</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <div class="row">
+            <div class="form-group col-lg-4">
+                <label class="me-2"><strong>Date on which prices are "active":</strong></label>
+                <input type="date" id="active_Data">
+            </div>
+            <div class="form-group col-lg-4">
+                <div class="row">
+                    <div class="check-controls col-lg-8 align-items-center mt-0">
+                        <input type="checkbox" class="form-check-input" id="chk_AddSod">
+                        <label><strong>Add SOD in final prices. Enter value</strong></label>
+                    </div>
+                    <div class="col-lg-3">
+                        <input type="text" class="form-control float-number" id="input_AddSod">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group col-lg-4">
+                <div class="row">
+                    <div class="check-controls col-lg-8 mt-0">
+                        <input type="checkbox" class="form-check-input" id="chk_alter_filename">
+                        <label><strong>Use alternative "Valid From" for file name</strong></label>
+                    </div>
+                    <div class="col-lg-4">
+                        <input type="date" class="form-control" id="input_alter_filename">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2 check-container">
+            <div class="col-lg-12">
+                <div class="row">
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_IncludePrice">
+                            <label>Include Trade Prices</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_IncludeNetPrice">
+                            <label>Include Customer Net Prices (A652)</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_CustHirearchy">
+                            <label>Include Customer Hirearchy Net Prices (A657)</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_IncludeOverallPrice">
+                            <label>Include Overall Net Prices (A655-ZNTP)</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_IncludePriceGroup">
+                            <label>Include Price Group Nets</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_IncludeSaleOffPrice">
+                            <label>Include Sell-Off Prices (A655-ZNT1)</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_IncludePromoPrice">
+                            <label>Include Promo Price - Promo (ZPNP)</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_ShiftBreaks">
+                            <label>Shift Breaks if Break 1 is 0</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_Moq">
+                            <label>Use MOQ as Brk 1</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_ShowTemplateMaterialOnly">
+                            <label>ShowTemplateMaterialOnly</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_AutoReport">
+                            <label>Auto Report</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls">
+                            <input type="checkbox" class="form-check-input" id="chk_SendMail">
+                            <label>Send Mail</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls mt-2">
+                            <input type="checkbox" class="form-check-input" id="chk_NotFoundMaterials">
+                            <label>ShowNotFoundMaterials</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <div class="check-controls mt-2">
+                            <input type="checkbox" class="form-check-input" id="chk_UseProductHierarchyOverride">
+                            <label>Use Product Hierarchy Override</label>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group col-lg-12 mt-2 d-flex">
+                            <div class="col-lg-3 d-flex align-items-center">
+                                <label for="userLevel">Trade List Template</label>
+                            </div>
+                            <div class="col-lg-9">
+                                <select class="form-control" id="dp_tradeTemplate">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group col-lg-12 mt-2 d-flex">
+                            <div class="col-lg-3 d-flex align-items-center">
+                                <label for="userLevel">Trade List Format</label>
+                            </div>
+                            <div class="col-lg-9">
+                                <select class="form-control" id="dp_templateOutput">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade list-modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"><Strong>Customer List</Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modelGrid" style="height: 250px; width:100%;" class="ag-theme-alpine"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary list-selection" data-bs-dismiss="modal">Select</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addClientModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addClientModalLabel"><Strong>Add Clients Manually</Strong></h5>
+                <button type="button" class="btn-close" aria-label="Close" id="btnCloseModal" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group col-lg-12 d-flex">
+                    <div class="col-lg-3 d-flex align-items-center">
+                        <label for="userLevel"><strong>Customer Templates</strong></label>
+                    </div>
+                    <div class="col-lg-9">
+                        <select class="form-control" id="dp_Customertemplates">
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group col-lg-12 d-flex">
+                    <div class="col-lg-3 d-flex align-items-center">
+                        <label for="userLevel"><strong>Additional customers:</strong></label>
+                    </div>
+                    <div class="col-lg-9">
+                        <textarea id="txtAddCustomer" name="txtAddCustomer" rows="4" cols="50" class="form-control" style="overflow-y:scroll;width: 20rem;"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btnCloseaddClientModal" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary addCustManual" data-bs-dismiss="modal" id="addCustomerModalBtn">Add Customers</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="commonModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><Strong id="commonModalTitle"></Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="commonMessage">
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="processOverlay" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+<div class="modal fade" id="displayProcessModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><Strong>Process Status</Strong></h5>
+            </div>
+            <div class="modal-body" id="Processmsg">
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let gridApi;
+    let modelgridApi;
+    var maxSelectionCustomers = 0;
+    var intervalId = 1000;
+    $("#processInnerDiv").hide();
+    var downloadflag = true;
+    var isEtlProcessing = false;
+    var productHirearchyOverideDate = '';
+    //main table config start
+    const columnDefs = [
+        { field: "KUNNR", headerName: "Customer Number", width: 150 },
+        { field: "NAME1", headerName: "Customer Name" },
+        { field: "xVKORG", headerName: "PCx", width: 100, hide: true },
+        { field: "KVGR1", headerName: "PC1", width: 100 },
+        { field: "KVGR2", headerName: "PC2", width: 100 },
+        { field: "KVGR3", headerName: "PC3", width: 100 },
+        { field: "Organization", headerName: "Organization", hide: true }
+    ];
+
+    const gridOptions = {
+        columnDefs: columnDefs,
+        rowData: [],
+        rowHeight: 35,
+        headerHeight: 35,
+        pagination: false,
+        paginationPageSize: 5,
+        defaultColDef: {
+            sortable: true,
+            filter: true,
+            floatingFilter: false,
+            suppressHeaderMenuButton: true,
+        },
+    };
+
+    //main table config end
+
+    //popup config start
+    const custModelColumnDefs = [
+        {
+            field: '',
+            checkboxSelection: true,
+            headerCheckboxSelection: true,
+            headerCheckboxSelectionFilteredOnly: true,
+            sortable: false,
+            filter: false,
+            floatingFilter: false,
+            width: 40, pinned: 'left'
+        },
+        { field: "KUNNR", headerName: "Customer Number" },
+        { field: "NAME1", headerName: "Customer Name" },
+        { field: "xVKORG", headerName: "PCx", hide: true },
+        { field: "KVGR1", headerName: "PC1", },
+        { field: "KVGR2", headerName: "PC2", },
+        { field: "KVGR3", headerName: "PC3", },
+        { field: "Organization", headerName: "Organization", hide: true }
+    ];
+
+    const custModelGridOptions = {
+        columnDefs: custModelColumnDefs,
+        rowData: [],
+        rowHeight: 35,
+        headerHeight: 35,
+        pagination: false,
+        rowSelection: 'multiple',
+        paginationPageSize: 5,
+        defaultColDef: {
+            sortable: true,
+            filter: true,
+            floatingFilter: true,
+            suppressHeaderMenuButton: true,
+        },
+    };
+    //popup config end
+
+
+    //disable of elements if organization is not selected
+    function DisableIfOrgNotSelected() {
+        $("#dp_tradeTemplate").empty()
+        $("#dp_tradeTemplate").append("<option value=0> -- Select Trade List Template -- </option>")
+        $("#dp_tradeTemplate").prop("disabled", true)
+        $("#dp_templateOutput").empty()
+        $("#dp_templateOutput").append("<option value=0> -- Select Trade List Formate -- </option>")
+        $("#dp_templateOutput").prop("disabled", true)
+        $("#listCustomersPopup").prop("disabled", true)
+        $("#listCustomersPopup").html("List")
+        $(".clear-list").prop("disabled", true)
+        $("#addClientToList").prop("disabled", true)
+        $("#btn_GeneratePrice").prop("disabled", true)
+        $("#input_alter_filename").prop("disabled", true)
+        $("#input_AddSod").prop("disabled", true);
+
+        $("#dp_Customertemplates").empty()
+        $("#dp_Customertemplates").append("<option value=0> -- Select Customer Template -- </option>")
+        //$("#dp_Customertemplates").prop("disabled", true)
+    }
+
+
+    //allow only decimal values
+    $('.float-number').keypress(function (event) {
+        if ((event.which != 46 || $(this).val().indexOf('.') != -1) && (event.which < 48 || event.which > 57)) {
+            event.preventDefault();
+        }
+    });
+
+    //Default loading of page for saved user configuration
+    $(function () {
+        //testprice()
+
+        DisableIfOrgNotSelected();
+        DefaultSavedUserConfig();
+        GetProductOverrideDate();
+
+    })
+
+    //Loading of default saved configuration
+    function DefaultSavedUserConfig() {
+        $("#processOverlay").css("width", "100%")
+        $("#myGrid").empty()
+        $("#orgLevel").prop("disabled", true)
+        const gridDiv = document.querySelector('#myGrid');
+            gridApi = agGrid.createGrid(gridDiv, gridOptions);
+        gridApi.sizeColumnsToFit();
+        $("#processOverlay").css("width", "100%")
+        $.when(
+            $.get('/PriceList/GetCountryList'),  // Load Organization
+            $.get('/PriceList/GetDiscountsByCountry'), // Load Discounts
+            $.get('/PriceList/GetPriceFileSaveConfig'), // User Saved Config
+        ).done(function (data1, data2, data3) {
+            $("#processOverlay").css("width", "0%")
+            maxSelectionCustomers = data1[1] == "success" ? data1[0].MaxSelectCustomers : 0
+            $("#maxCustomersCount").val(maxSelectionCustomers)
+            var OrgList = data1[1] == "success" ? data1[0].data : []
+            var DiscList = data2[1] == "success" ? data2[0] : []
+            var UseConfigList = data3[1] == "success" ? data3[0] : []
+            var code = UseConfigList?.SalesOrganization.length > 0 ? UseConfigList.SalesOrganization : ""
+
+            // Organization DropDown Binding
+            if (OrgList.length > 0) {
+                $("#orgLevel").empty()
+                var options = '';
+                options += '<option value="0">Select</option>';
+                for (var i = 0; i < OrgList.length; i++) {
+                    options += '<option value="' + OrgList[i].VKORG + '">' + OrgList[i].VKORG + '</option>';
+                }
+                $('#orgLevel').append(options);
+            }
+
+            // Discount Binding
+            if (DiscList.length > 0) {
+                $("#discountBinding").empty()
+                var txt = ""
+                for (var i = 0; i < DiscList.length; i++) {
+                    txt += "<div class='form-group col-lg-6'><div class='check-controls'>"
+                    txt += "<input type='checkbox' class='form-check-input discount-check' id='CanInclude" + DiscList[i].DiscountName + "' onclick='DiscountClicked(this);' >"
+                    txt += "<label>Include " + DiscList[i].DiscountName + "<span class='d-none'> - (" + DiscList[i].DiscountValue + ") </span></label>"
+                    txt += "</div></div>"
+                }
+                $("#discountBinding").append(txt)
+            }
+
+
+            // Save User Config Binding
+            if (typeof (UseConfigList) == 'object' && UseConfigList != null) {
+                $("#orgLevel").val(code)
+                $("#org_val").val(code)
+                var objarray = []
+                var differentOrgExists = false;
+                for (let i = 0; i < UseConfigList?.SelectedCustomers.length; i++) {
+                    if (code != UseConfigList.SelectedCustomers[i].Organization) {
+                        differentOrgExists = true;
+                        break;
+                    }
+                    let obj = {
+                        KUNNR: UseConfigList.SelectedCustomers[i].CustomerNumber,
+                        NAME1: UseConfigList.SelectedCustomers[i].CustomerName,
+                        xVKORG: UseConfigList.SelectedCustomers[i].zKUNNR,
+                        KVGR1: UseConfigList.SelectedCustomers[i].PC1,
+                        KVGR2: UseConfigList.SelectedCustomers[i].PC2,
+                        KVGR3: UseConfigList.SelectedCustomers[i].PC3,
+                        Organization: UseConfigList.SelectedCustomers[i].Organization
+                    }
+                    objarray.push(obj);
+                }
+                if (differentOrgExists == true) {
+                    objarray = []
+                    //gridApi.setRowData([]);
+                    gridApi.setGridOption("rowData", []);
+                    ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.DifferentOrgCustomers");
+
+                } else {
+                    //gridApi.setRowData(objarray);
+                    gridApi.setGridOption("rowData", objarray);
+                }
+
+                var today = new Date().toISOString().split('T')[0]
+                //if (new Date() >= new Date(UseConfigList?.PricesActiveDate.split('T')[0])) {
+                //    $("#active_Data").val(UseConfigList?.PricesActiveDate.split('T')[0])
+                //} else {
+                $("#active_Data").val(today)
+                //}
+
+                $("#active_Data").attr('min', today)
+                $("#chk_AddSod").prop("checked", UseConfigList.CanAddSODInFinalPrice)
+                if (UseConfigList.CanAddSODInFinalPrice == true) {
+                    $("#input_AddSod").prop("disabled", false);
+                    $("#input_AddSod").val((UseConfigList.SODInFinalPriceValue * 100) + "%")
+                } else {
+                    $("#input_AddSod").prop("disabled", true);
+                    $("#input_AddSod").val("")
+                }
+
+                $("#input_alter_filename").attr('min', today)
+                if (UseConfigList.CanUseAlternateValidFromDate == true) {
+                    $("#chk_alter_filename").prop("checked", UseConfigList.CanUseAlternateValidFromDate)
+                    $("#input_alter_filename").prop("disabled", false);
+                    $("#input_alter_filename").val(UseConfigList.AlternateValidFromDate.split('T')[0])
+                } else {
+                    $("#chk_alter_filename").prop("checked", UseConfigList.CanUseAlternateValidFromDate)
+                    $("#input_alter_filename").prop("disabled", true);
+                    $("#input_alter_filename").val('')
+                }
+
+                $("#chk_IncludePrice").prop("checked", UseConfigList.CanIncludeTradePrices)
+                $("#chk_IncludeNetPrice").prop("checked", UseConfigList.CanIncludeCustomerNetPrices)
+                $("#chk_CustHirearchy").prop("checked", UseConfigList.CanIncludeCustomerHierarchyNetPrices)
+                $("#chk_IncludeOverallPrice").prop("checked", UseConfigList.CanIncludeOverallNetPrices)
+                $("#chk_IncludePriceGroup").prop("checked", UseConfigList.CanIncludePriceGroupNets)
+                $("#chk_IncludeSaleOffPrice").prop("checked", UseConfigList.CanIncludeSellOffPrices)
+                $("#chk_IncludePromoPrice").prop("checked", UseConfigList.CanIncludePromoPrice)
+                $("#chk_ShiftBreaks").prop("checked", UseConfigList.CanUseShiftBreaks)
+                $("#chk_Moq").prop("checked", UseConfigList.CanUseMOQAsBrk1)
+                $("#chk_AutoReport").prop("checked", UseConfigList.CanUseAutoReportContent)
+                $("#chk_ShowTemplateMaterialOnly").prop("checked", UseConfigList.CanShowTemplateMaterialOnly)
+                $("#chk_UseProductHierarchyOverride").prop("checked", UseConfigList.CanIncludeProductHierarchyOverride)
+                if (UseConfigList.CanUseLocalCOSForProductHierarchy == true) {
+                    $("#chk_toggle").prop('checked', true)
+                } else {
+                    $("#chk_toggle").prop('checked', false)
+                }
+
+                if (UseConfigList.CanUseAutoReportContent == true) {
+                    $("#dp_tradeTemplate").prop("disabled", true)
+                    $("#dp_tradeTemplate").val(0);
+                } else {
+                    $("#dp_tradeTemplate").prop("disabled", false)
+                    $("#dp_tradeTemplate").val(UseConfigList.ReportContentTemplateID)
+                }
+                $("#dp_templateOutput").val(UseConfigList.ReportFormatTemplateID)
+
+                $("#discountBinding input[type='checkbox']").each(function () {
+                    $("#" + this.id).prop("checked", UseConfigList[this.id.trim()])
+                    if (UseConfigList[this.id.trim()] == true) {
+                        $("#" + this.id).siblings('label').find('span').removeClass('d-none')
+                    }
+                })
+
+                $("#dp_tradeTemplate").prop("disabled", false)
+                //$("#listCustomersPopup").prop("disabled", true)
+                $("#dp_templateOutput").prop("disabled", false)
+                $("#btn_GeneratePrice").prop("disabled", false)
+                //$("#listCustomersPopup").html("Fetching Data")
+                $("#addClientToList").prop("disabled", false)
+                //$("#listCustomersPopup").prop("disabled", false)
+                BindTemplates(code, UseConfigList.ReportContentTemplateID, UseConfigList.ReportFormatTemplateID);
+                GetCustomersbyOrg(code, objarray)
+            }
+            else {
+
+                if ($("#orgLevel").val() == "0") {
+                    BindTemplates(0, 0, 0);
+                    $("#addClientToList").prop("disabled", true)
+                    $("#listCustomersPopup").prop("disabled", true)
+                    $(".clear-list").prop("disabled", true)
+                    //GetCustomersbyOrg($("#orgLevel").val(), [])
+                    $("#orgLevel").prop("disabled", false)
+                }
+                else {
+                    BindTemplates($("#orgLevel").val(), 0, 0);
+                    GetCustomersbyOrg($("#orgLevel").val(), [])
+                    $("#addClientToList").prop("disabled", true)
+                    $("#listCustomersPopup").prop("disabled", true)
+                    $(".clear-list").prop("disabled", true)
+                }
+
+            }
+
+        }).fail(function () {
+            $("#processOverlay").css("width", "0%");
+            //alert("error:Api failure");
+            console.log("error:Api failure");
+            //location.reload(true);
+            $("#orgLevel").prop("disabled", false)
+            $("#displayProcessModal").modal('hide')
+            $("#RelanchModal").modal('show');
+        })
+    }
+
+    // bind template input and output dropdowns
+    function BindTemplates(code, template, output) {
+        $.when(
+            $.get('/PriceList/GetTradeListTemplate?CtryName=' + code),
+            $.get('/PriceList/GetTradeListOutputFormate?CtryName=' + code),
+            $.get('/PriceList/GetCustomerListTemplate?CtryName=' + code)
+        ).done(function (first, second, third) {
+            var tradeTemp = first[1] == "success" ? first[0] : []
+            var tradeTempOutput = second[1] == "success" ? second[0] : []
+            var custListTemp = third[1] == "success" ? third[0] : []
+            if (tradeTemp?.length > 0) {
+                $("#dp_tradeTemplate").empty()
+                var options = '';
+                options += '<option value="0"> -- Select Trade List Template -- </option>';
+                for (var i = 0; i < tradeTemp.length; i++) {
+                    options += '<option value="' + tradeTemp[i].TemplateMasterID + '">' + tradeTemp[i].AliasName + '</option>';
+                }
+                $('#dp_tradeTemplate').append(options);
+            } else {
+                $("#dp_tradeTemplate").empty()
+                $('#dp_tradeTemplate').append('<option value="0"> -- Select Trade List Template -- </option>');
+            }
+            $('#dp_tradeTemplate').val(template)
+
+            if (tradeTempOutput?.length > 0) {
+                $("#dp_templateOutput").empty()
+                var options = '';
+                options += '<option value="0"> -- Select Trade List Formate -- </option>';
+                for (var i = 0; i < tradeTempOutput.length; i++) {
+                    options += '<option value="' + tradeTempOutput[i].ReportFormatMasterID + '">' + tradeTempOutput[i].AliasName + '</option>';
+                }
+                $('#dp_templateOutput').append(options);
+            } else {
+                $("#dp_templateOutput").empty();
+                $('#dp_templateOutput').append('<option value="0"> -- Select Trade List Formate -- </option>');
+            }
+            $('#dp_templateOutput').val(output)
+
+            if (custListTemp?.length > 0) {
+                $("#dp_Customertemplates").empty()
+                var options = '';
+                options += '<option value="0"> -- Select Customer Template -- </option>';
+                for (var i = 0; i < custListTemp.length; i++) {
+                    options += '<option value="' + custListTemp[i].TemplateMasterID + '">' + custListTemp[i].AliasName + '</option>';
+                }
+                $('#dp_Customertemplates').append(options);
+            } else {
+                $("#dp_Customertemplates").empty();
+                $('#dp_Customertemplates').append('<option value="0"> -- Select Customer Template -- </option>');
+            }
+
+            $('#dp_Customertemplates').val(0)
+
+            if (template == 0 || output == 0) {
+                $('#dp_templateOutput').prop("disabled", true)
+                $('#dp_tradeTemplate').prop("disabled", true)
+            }
+            else if (template == null || output == null) {
+                $('#dp_templateOutput').prop("disabled", false)
+                $('#dp_tradeTemplate').prop("disabled", false)
+                $('#dp_templateOutput').val("0")
+                $('#dp_tradeTemplate').val("0")
+            } else {
+                $('#dp_templateOutput').prop("disabled", false)
+                $('#dp_tradeTemplate').prop("disabled", false)
+                $('#dp_templateOutput').val(output)
+                $('#dp_tradeTemplate').val(template)
+            }
+
+
+        }).fail(function () {
+            $("#processOverlay").css("width", "0%");
+            //alert("error:Api failure");
+            console.log("error:Api failure");
+            //location.reload(true);
+            $("#displayProcessModal").modal('hide')
+            $("#RelanchModal").modal('show');
+        })
+    }
+
+    //clear of all fields by setting default values
+    function ClearAllFields() {
+        var today = new Date().toISOString().split('T')[0]
+        $("#discountBinding input[type='checkbox']").each(function () {
+            $("#" + this.id).prop("checked", false)
+            $("#" + this.id).siblings('label').find('span').addClass('d-none')
+        })
+        $("#chk_AddSod").prop("checked", false)
+        $("#input_AddSod").val("")
+        $("#active_Data").val(today)
+        $("#active_Data").attr('min', today)
+        $("#input_AddSod").prop("disabled", true);
+        $("#input_AddSod").val("")
+        $("#chk_alter_filename").prop("checked", false)
+        $("#input_alter_filename").prop("disabled", true);
+        $("#input_alter_filename").val('')
+        $("#input_alter_filename").attr('min', today)
+        $("#chk_IncludePrice").prop("checked", false)
+        $("#chk_IncludeNetPrice").prop("checked", false)
+        $("#chk_CustHirearchy").prop("checked", false)
+        $("#chk_IncludeOverallPrice").prop("checked", false)
+        $("#chk_IncludePriceGroup").prop("checked", false)
+        $("#chk_IncludeSaleOffPrice").prop("checked", false)
+        $("#chk_IncludePromoPrice").prop("checked", false)
+        $("#chk_ShiftBreaks").prop("checked", false)
+        $("#chk_Moq").prop("checked", false)
+        $("#chk_UseGlobalCOS").prop("checked", false)
+        $("#chk_UseLocalCos").prop("checked", false)
+        $("#chk_AutoReport").prop("checked", false)
+        $("#chk_ShowTemplateMaterialOnly").prop("checked", false)
+        $("#dp_tradeTemplate").prop("disabled", false)
+        $("#dp_tradeTemplate").empty()
+        $("#dp_tradeTemplate").append("<option value=0> -- Select Trade List Template -- </option>")
+        $("#dp_templateOutput").empty()
+        $("#dp_templateOutput").append("<option value=0> -- Select Trade List Formate -- </option>")
+
+        $("#dp_Customertemplates").empty()
+        $("#dp_Customertemplates").append("<option value=0> -- Select Customer Template -- </option>")
+
+        const gridDiv = document.querySelector('#myGrid');
+        //gridOptions.api.setRowData([]);
+        gridApi.setGridOption("rowData", []);
+        $("#chk_toggle").prop('checked', true)
+        $("#listCustomersPopup").prop("disabled", true)
+        $(".clear-list").prop("disabled", true)
+        $("#addClientToList").prop("disabled", true)
+        $("#btn_GeneratePrice").prop("disabled", true)
+        $("#chk_SendMail").prop("checked", false)
+        $("#orgLevel").prop("disabled", false)
+    }
+
+
+    //set default values
+    function SetToDefault() {
+        var today = new Date().toISOString().split('T')[0]
+        $("#discountBinding input[type='checkbox']").each(function () {
+            $("#" + this.id).prop("checked", true)
+            $("#" + this.id).siblings('label').find('span').removeClass('d-none')
+        })
+        $("#chk_AddSod").prop("checked", false)
+        $("#input_AddSod").val("")
+        $("#active_Data").val(today)
+        $("#active_Data").attr('min', today)
+        $("#input_AddSod").prop("disabled", true);
+        $("#input_AddSod").val("")
+        $("#chk_alter_filename").prop("checked", false)
+        $("#input_alter_filename").prop("disabled", true);
+        $("#input_alter_filename").val('')
+        $("#input_alter_filename").attr('min', today)
+        $("#chk_IncludePrice").prop("checked", true)
+        $("#chk_IncludeNetPrice").prop("checked", true)
+        $("#chk_CustHirearchy").prop("checked", true)
+        $("#chk_IncludeOverallPrice").prop("checked", true)
+        $("#chk_IncludePriceGroup").prop("checked", true)
+        $("#chk_IncludeSaleOffPrice").prop("checked", false)
+        $("#chk_IncludePromoPrice").prop("checked", false)
+        $("#chk_ShiftBreaks").prop("checked", false)
+        $("#chk_Moq").prop("checked", true)
+        $("#chk_UseGlobalCOS").prop("checked", false)
+        $("#chk_UseLocalCos").prop("checked", false)
+        $("#chk_AutoReport").prop("checked", false)
+        $("#chk_ShowTemplateMaterialOnly").prop("checked", true)
+        $("#dp_tradeTemplate").prop("disabled", false)
+        $("#listCustomersPopup").prop("disabled", false)
+        $(".clear-list").prop("disabled", false)
+        $("#btn_GeneratePrice").prop("disabled", false)
+        $("#addClientToList").prop("disabled", false)
+        const gridDiv = document.querySelector('#myGrid');
+        //gridOptions.api.setRowData([]);
+        gridApi.setGridOption("rowData", []);
+        $("#chk_toggle").prop('checked', true)
+        $("#chk_SendMail").prop("checked", false)
+    }
+
+    //fetch list of customers based on Organization
+    $("#orgLevel").on("change", function () {
+        $("#processOverlay").css("width", "100%")
+        var orgval = $("#org_val").val()
+        if (orgval == $("#orgLevel").val()) {
+
+            DefaultSavedUserConfig()
+        }
+        else if ($("#orgLevel").val() == "0") {
+            ClearAllFields()
+            $("#processOverlay").css("width", "0%")
+            $("#listCustomersPopup").html("List")
+            $("#listCustomersPopup").prop("disabled", true)
+            $(".clear-list").prop("disabled", true)
+            $("#addClientToList").prop("disabled", true)
+        }
+        else {
+            $("#orgLevel").prop("disabled", true)
+            $("#addClientToList").prop("disabled", true)
+            $("#listCustomersPopup").prop("disabled", true)
+            $(".clear-list").prop("disabled", true)
+            $.ajax({
+                type: 'Get',
+                url: '@Url.Action("GetDiscountsByCountry", "PriceList")',
+                data: {},
+                datatype: JSON,
+                success: function (data) {
+                    if (data.length > 0) {
+                        $("#discountBinding").empty()
+                        var txt = ""
+                        for (var i = 0; i < data.length; i++) {
+                            txt += "<div class='form-group col-lg-6'><div class='check-controls'>"
+                            txt += "<input type='checkbox' class='form-check-input discount-check' id='CanInclude" + data[i].DiscountName + "' onclick='DiscountClicked(this);' >"
+                            txt += "<label>Include " + data[i].DiscountName + "<span class='d-none'> - (" + data[i].DiscountValue + ") </span></label>"
+                            txt += "</div></div>"
+                        }
+                        $("#discountBinding").append(txt)
+
+                        SetToDefault();
+                        BindTemplates($("#orgLevel").val(), null, null)
+                        $("#processOverlay").css("width", "0%")
+                        GetCustomersbyOrg($("#orgLevel").val(), [])
+                    }
+                },
+                error: function (data) { /*alert(data); */
+                    console.log(data);
+                    //location.reload(true);
+                    $("#displayProcessModal").modal('hide')
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        }
+
+
+    })
+
+    //fetch and load customers from selected template
+
+    $("#dp_Customertemplates").on('change', function (e) {
+        var valueSelected = $(this).val();
+        $("#processOverlay").css("width", "100%");
+        $("#addCustomerModalBtn").attr('disabled', false);
+        if ($("#orgLevel").val() != '') {
+            $.ajax({
+                type: 'Get',
+                url: '@Url.Action("GetCustomerTemplateDatabyID", "PriceList")',
+                data: { 'masterTemplateID': $("#dp_Customertemplates").val() },
+                datatype: JSON,
+                success: function (data) {
+                    if (data.length > 0) {
+                        $("#txtAddCustomer").val('')
+                        var txt = "";
+                        for (var i = 0; i < data.length; i++) {
+                            txt += data[i].CustomerNo + '\n';
+                        }
+                        $("#txtAddCustomer").val(txt);
+                    }
+                    $("#processOverlay").css("width", "0%")
+                },
+                error: function (data) {
+                    //alert(data);
+                    console.log(data);
+                    //location.reload(true);
+                    $("#displayProcessModal").modal('hide')
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        }
+    })
+
+    // enable button on change of input area to load customers
+    $("#txtAddCustomer").on('change', function () {
+        var str = $("#txtAddCustomer").val();
+        if (str.trim().length > 0) {
+            $("#addCustomerModalBtn").attr('disabled', false);
+            $("#txtAddCustomer").val(str)
+        }
+        else {
+            $("#addCustomerModalBtn").attr('disabled', true);
+        }
+    })
+
+    //Load customers
+    function GetCustomersbyOrg(code, mdata) {
+        $("#btn_GeneratePrice").prop("disabled", false)
+        $("#listCustomersPopup").html("Fetching Data")
+        $("#listCustomersPopup").prop("disabled", true)
+        $(".clear-list").prop("disabled", true)
+        $("#addClientToList").prop("disabled", true)
+        $("#orgLevel").prop("disabled", true)
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("GetCustomerByCountry", "PriceList")',
+            data: { ctrycode: code },
+            datatype: JSON,
+            success: function (data) {
+                $("#modelGrid").empty()
+                const modelDiv = document.querySelector('#modelGrid');
+                //new agGrid.Grid(modelDiv, custModelGridOptions);
+                modelgridApi = agGrid.createGrid(modelDiv, custModelGridOptions);
+                //custModelGridOptions.api.setRowData([]);
+                modelgridApi.setGridOption("rowData", []);
+                if (data?.length != 0) {
+                    $("#listCustomersPopup").html("List")
+                    $("#listCustomersPopup").prop("disabled", false)
+                    $(".clear-list").prop("disabled", false)
+                    $("#addClientToList").prop("disabled", false)
+                    $("#orgLevel").prop("disabled", false)
+                    $("#modelGrid").empty()
+                    const modelDiv = document.querySelector('#modelGrid');
+                    //new agGrid.Grid(modelDiv, custModelGridOptions);
+                    modelgridApi = agGrid.createGrid(modelDiv, custModelGridOptions);
+                    LoadCustGrid(data)
+                    if (mdata.length > 0) {
+                        const map = new Map();
+                        mdata.forEach(obj => {
+                            map.set(obj.KUNNR, obj)
+                        });
+                        modelgridApi.forEachNode((rowNode, index) => {
+                            if (map.has(rowNode.data.KUNNR)) {
+                                rowNode.setSelected(true);
+                            }
+                        });
+                    }
+
+                } else {
+                    $("#modelGrid").empty()
+                    const modelDiv = document.querySelector('#modelGrid');
+                    //new agGrid.Grid(modelDiv, custModelGridOptions);
+                    modelgridApi = agGrid.createGrid(modelDiv, custModelGridOptions);
+                    $("#listCustomersPopup").prop("disabled", false)
+                    $(".clear-list").prop("disabled", false)
+                    $("#addClientToList").prop("disabled", false)
+                    LoadCustGrid([])
+                }
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%")
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#displayProcessModal").modal('hide')
+                $("#RelanchModal").modal('show');
+            }
+        });
+    }
+
+    function GetProductOverrideDate(){
+        $.ajax({
+            type: 'Get',
+            url: '/Configure/ApplicationSettingsJson',
+            data: {},
+            datatype: JSON,
+            success: function (data) {
+                for (const obj of data) {
+                    // Check if the ConfigType is 'OverrideDate'
+                    if (obj.ConfigType === 'OverrideDate') {
+                        productHirearchyOverideDate = obj.ConfigValue;
+                    }
+                }
+
+            },
+            error: function (data) { console.log(data); }
+        });
+    }
+
+    //Load popup modal grid
+    function LoadCustGrid(data) {
+        if (data.length > 0) {
+            //custModelGridOptions.api.setRowData(data);
+            modelgridApi.setGridOption("rowData", data);
+        }
+        else {
+            //custModelGridOptions.api.setRowData([]);
+            modelgridApi.setGridOption("rowData", []);
+        }
+
+    }
+
+    //selected list of customers to main table
+    $(".list-selection").click(function () {
+        rowData = modelgridApi.getSelectedRows();
+        const gridDiv = document.querySelector('#myGrid');
+        //gridOptions.api.setRowData(rowData);
+        gridApi.setGridOption("rowData", rowData);
+    });
+
+    //Copied customers add to main table
+    $(".addCustManual").click(function () {
+
+        var newData = [];
+        //var custList = $('#txtAddCustomer').val().split(/\r?\n/);
+        $("#processOverlay").css("width", "100%")
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("GetCustomerByCustomerNo", "PriceList")',
+            data: { ctrycode: $("#orgLevel").val(), custList: $('#txtAddCustomer').val() },
+            datatype: JSON,
+            success: function (data) {
+
+                if (data?.length != 0) {
+                    const modelDiv = document.querySelector('#modelGrid');
+                    var addIndex = undefined;
+                    modelgridApi.forEachNode((rowNode, index) => {
+                        jQuery.each(data, function (i, val) {
+                            if (val.KUNNR == rowNode.data.KUNNR) {
+                                rowNode.setSelected(true);
+                            }
+                        });
+                    });
+
+                    $(".list-selection").click();
+                    //const res = gridOptions.api.applyTransaction({
+                    //    add: data,
+                    //    addIndex: addIndex,
+                    //})
+                    $("#txtAddCustomer").val("");
+                    $("#processOverlay").css("width", "0%")
+                    clearDataOnModalClose();
+                } else {
+                    $("#processOverlay").css("width", "0%")
+                    clearDataOnModalClose();
+                    ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderInformation", "@PFCWebAPP.Utilities.AppConfig.CustomersDidNotMatchOrg")
+
+                }
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%")
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#displayProcessModal").modal('hide')
+                $("#RelanchModal").modal('show');
+            }
+        });
+
+    });
+
+    //list modal
+    $('#exampleModal').on('shown.bs.modal', function (e) {
+        //gridOptions.api.sizeColumnsToFit();
+        //custModelGridOptions.api.sizeColumnsToFit();
+    });
+
+    //clear all customers in main table
+    $(".clear-list").click(function () {
+        selPopupData = modelgridApi.getSelectedRows();
+        if (selPopupData.length > 0) {
+            const map = new Map();
+            selPopupData.forEach(obj => {
+                map.set(obj.KUNNR, obj)
+            });
+            modelgridApi.forEachNode((rowNode, index) => {
+                if (map.has(rowNode.data.KUNNR)) {
+                    rowNode.setSelected(false);
+                }
+            });
+        }
+
+        gridApi.forEachNode(function (node) {
+            rowData.push(node.data);
+        });
+        const res = gridApi.applyTransaction({
+            remove: rowData,
+        });
+        //gridOptions.api.setRowData([]);
+        gridApi.setGridOption("rowData", []);
+    });
+
+    //view of selected check boxes values
+    function DiscountClicked(evt) {
+        if (evt.checked) {
+            evt.parentNode.childNodes[1].childNodes[1].classList.remove("d-none")
+        } else {
+            evt.parentNode.childNodes[1].childNodes[1].classList.add("d-none")
+        }
+    }
+
+    //disable of dropdown on checked click of auto report
+    $("#chk_AutoReport").on('click', function () {
+        if ($("#chk_AutoReport").is(':checked') == true && $('#orgLevel').val() != '0') {
+            $("#dp_tradeTemplate").prop("disabled", true)
+            $("#dp_tradeTemplate").val(0);
+        } else {
+            $("#dp_tradeTemplate").prop("disabled", false)
+        }
+    })
+
+    // check box of SOD changed
+    $("#chk_AddSod").on("change", function () {
+        if ($(this).is(":checked")) {
+            $("#input_AddSod").prop("disabled", false);
+            $("#input_AddSod").val('');
+        } else {
+            $("#input_AddSod").prop("disabled", true);
+            $("#input_AddSod").val('')
+        }
+    })
+
+    // input of SOD changed
+    $("#input_AddSod").on("change", function () {
+        let percent = $("#input_AddSod").val()
+        if (percent.length > 0) {
+            if (parseFloat(percent) == 0) {
+                percent = "0";
+            }
+            let checkPercent = percent.trim().charAt(percent.trim().length - 1)
+            if (checkPercent != '%') {
+                $("#input_AddSod").val(percent + '%')
+            }
+            if (checkPercent == '%' && percent.trim().length == 1) {
+                $("#input_AddSod").val('0%')
+            }
+        }
+
+    })
+
+    //check box of alter valid date
+    $("#chk_alter_filename").on("change", function () {
+        if ($(this).is(":checked")) {
+            $("#input_alter_filename").prop("disabled", false)
+        } else {
+            $("#input_alter_filename").prop("disabled", true)
+            $("#input_alter_filename").val('')
+        }
+    })
+
+    // common function to handle different validations
+    function ShowPopupMessage(header, msg) {
+        $("#commonModalTitle").text("");
+        $("#commonModalTitle").text(header);
+        $("#commonMessage").text(msg);
+        $("#commonModal").modal('show');
+    }
+
+    //generate button click
+    function GeneratePriceList() {
+
+        if (isEtlProcessing == true) {
+                showPopup();
+        }
+        else{
+
+        
+
+        if ($("#orgLevel").val() == '0') {
+            ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.SelectSalesOrganisation")
+            return;
+        }
+
+        var GridTableData = [];
+        gridApi.forEachNode((rowNode, index) => {
+            GridTableData.push({
+                CustomerSNO: index + 1,
+                CustomerNumber: rowNode.data.KUNNR,
+                CustomerName: rowNode.data.NAME1,
+                zKUNNR: rowNode.data.xVKORG,
+                PC1: rowNode.data.KVGR1,
+                PC2: rowNode.data.KVGR2,
+                PC3: rowNode.data.KVGR3,
+                Organization: rowNode.data.Organization
+            })
+
+        });
+        if (GridTableData.length <= 0) {
+            ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.SelectAtleastSingleCustomer")
+            return;
+        }
+
+        let maxCustomers = parseInt($("#maxCustomersCount").val())
+        if (GridTableData.length > maxCustomers) {
+            let msg = "@PFCWebAPP.Utilities.AppConfig.CustomerSelectionCountFromSettings" + maxCustomers;
+            ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", msg)
+            return;
+        }
+        var selected = [];
+        $('#discountBinding input[type=checkbox]').each(function () {
+            let ele = $(this).next().text().trim().split(' ')
+            selected.push({
+                FieldName: ele[1].trim(),
+                FieldText: ele[3].replace(/[{()}]/g, '').trim(),
+                Status: $(this).is(":checked")
+            });
+
+        });
+        var autoReport = $("#chk_AutoReport").is(":checked")
+        var sodvalue = ""
+        if ($("#input_AddSod").val() == "") {
+            sodvalue = 0
+        } else {
+            sodvalue = parseFloat($("#input_AddSod").val().split('%')[0]);
+        }
+
+        //if ($("#chk_UseGlobalCOS").is(":checked") == false && $("#chk_UseLocalCos").is(":checked") == false) {
+        //    ShowPopupMessage("Validation", "Please Select any of COS Value")
+        //    return;
+        //}
+        var chkTradePrices = $("#chk_IncludePrice").is(":checked")
+        var chkNetPrices = $("#chk_IncludeNetPrice").is(":checked")
+        var chkOverallNetPrices = $("#chk_IncludeOverallPrice").is(":checked")
+        // message for excluding trade prices
+        if (chkTradePrices == false) {
+            if (chkNetPrices == false && chkOverallNetPrices == false) {
+                ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.ExcludeNetTradePricesAndchkOverallNetPrices")
+                return;
+            }
+        }
+        // message for excluding netprices
+        if (chkNetPrices == false) {
+            if (chkTradePrices == false && chkOverallNetPrices == false) {
+                ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.ExcludechkTradePricesAndchkOverallNetPrices")
+                return;
+            }
+        }
+        // message for excluding overallnet prices
+        if (chkOverallNetPrices == false) {
+            if (chkTradePrices == false && chkNetPrices == false) {
+                ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.chkOverallNetPrices")
+                return;
+            }
+        }
+
+        if (autoReport == false && ($("#dp_tradeTemplate").val() <= 0)) {
+            ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.SelectTradeTemplate")
+            return;
+        }
+        if ($("#dp_templateOutput").val() <= 0) {
+            ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.SelectTradeListFormat")
+            return;
+        }
+
+        var toggle_value = $("#chk_toggle").is(":checked");
+
+            // Assuming the values
+            let useProductHierarchyOverridebeforeModify = $("#chk_UseProductHierarchyOverride").is(":checked");
+            let useProductHierarchyOverride = $("#chk_UseProductHierarchyOverride").is(":checked");
+            let activeData = new Date($("#active_Data").val());
+            let productHierarchyOverrideDate = new Date(productHirearchyOverideDate);
+
+            // Checking the condition using ternary operator
+            useProductHierarchyOverride = (useProductHierarchyOverride && activeData < productHierarchyOverrideDate) ? false :
+                (useProductHierarchyOverride &&  activeData >= productHierarchyOverrideDate) ? true :
+                    useProductHierarchyOverride;
+
+            // Setting the value back to the checkbox
+            $("#chk_UseProductHierarchyOverride").prop("checked", useProductHierarchyOverride);
+
+        var obj = {
+            UserSESA: '',
+            SalesOrganization: $("#orgLevel").val(),
+            SelectedCustomers: JSON.stringify(GridTableData),
+            PricesActiveDate: $("#active_Data").val(),
+            CanUseAutoReportContent: autoReport,
+            ReportContentTemplateID: autoReport == false ? parseInt($("#dp_tradeTemplate").val()) : 0,
+            ReportFormatTemplateID: parseInt($("#dp_templateOutput").val()),
+            CanIncludeTradePrices: $("#chk_IncludePrice").is(":checked"),
+            CanIncludeCustomerNetPrices: $("#chk_IncludeNetPrice").is(":checked"),
+            CanIncludeCustomerHierarchyNetPrices: $("#chk_CustHirearchy").is(":checked"),
+            CanIncludeOverallNetPrices: $("#chk_IncludeOverallPrice").is(":checked"),
+            CanIncludePriceGroupNets: $("#chk_IncludePriceGroup").is(":checked"),
+            CanIncludeSellOffPrices: $("#chk_IncludeSaleOffPrice").is(":checked"),
+            CanIncludeDiscount1: selected.find(x => x.FieldName == "Discount1").Status,
+            CanIncludeDiscount2: selected.find(x => x.FieldName == "Discount2").Status,
+            CanIncludeDiscount3: selected.find(x => x.FieldName == "Discount3").Status,
+            CanIncludeDiscount4: selected.find(x => x.FieldName == "Discount4").Status,
+            CanIncludeDiscount5: selected.find(x => x.FieldName == "Discount5").Status,
+            CanIncludeDiscount6: selected.find(x => x.FieldName == "Discount6").Status,
+            CanIncludeDiscount7: selected.find(x => x.FieldName == "Discount7").Status,
+            CanIncludeDiscount8: selected.find(x => x.FieldName == "Discount8").Status,
+            CanIncludePromoPrice: $("#chk_IncludePromoPrice").is(":checked"),
+            CanUseShiftBreaks: $("#chk_ShiftBreaks").is(":checked"),
+            CanUseMOQAsBrk1: $("#chk_Moq").is(":checked"),
+            CanUseGlobalCOSForProductHierarchy: toggle_value == true ? false : true,
+            CanUseLocalCOSForProductHierarchy: toggle_value == true ? true : false,
+            CanAddSODInFinalPrice: $("#chk_AddSod").is(":checked"),
+            SODInFinalPriceValue: sodvalue == NaN ? 0 : sodvalue / 100,
+            CanUseAlternateValidFromDate: $("#chk_alter_filename").is(":checked"),
+            AlternateValidFromDate: $("#input_alter_filename").val(),
+            CanShowTemplateMaterialOnly: $("#chk_ShowTemplateMaterialOnly").is(":checked"),
+            SendEmail: $("#chk_SendMail").is(":checked"),
+            ShowNotFoundTemplateMaterials: $("#chk_NotFoundMaterials").is(":checked"),
+            CanIncludeProductHierarchyOverride : $("#chk_UseProductHierarchyOverride").is(":checked")
+        }
+        $("#displayProcessModal").modal({
+            show: false,
+            backdrop: 'static'
+        });
+        $('#Processmsg').empty();
+        $("#displayProcessModal").modal('show');
+        var txt = "<div>State - Preparing ...<div class='myProgress'><div class='myBar' id ='Progressbar'>0%</div></div></div>"
+        $('#Processmsg').html(txt)
+        $("#Progressbar").text("4%")
+        $("#Progressbar").css("width", "4%")
+
+        //console.log(obj)
+        $("#btn_GeneratePrice").prop("disabled", true)
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("UserPriceFileSaveConfig", "PriceList")',
+            data: {
+                UserSESA: '',
+                SalesOrganization: $("#orgLevel").val(),
+                SelectedCustomers: JSON.stringify(GridTableData),
+                PricesActiveDate: $("#active_Data").val(),
+                CanUseAutoReportContent: autoReport,
+                ReportContentTemplateID: autoReport == false ? parseInt($("#dp_tradeTemplate").val()) : 0,
+                ReportFormatTemplateID: parseInt($("#dp_templateOutput").val()),
+                CanIncludeTradePrices: $("#chk_IncludePrice").is(":checked"),
+                CanIncludeCustomerNetPrices: $("#chk_IncludeNetPrice").is(":checked"),
+                CanIncludeCustomerHierarchyNetPrices: $("#chk_CustHirearchy").is(":checked"),
+                CanIncludeOverallNetPrices: $("#chk_IncludeOverallPrice").is(":checked"),
+                CanIncludePriceGroupNets: $("#chk_IncludePriceGroup").is(":checked"),
+                CanIncludeSellOffPrices: $("#chk_IncludeSaleOffPrice").is(":checked"),
+                CanIncludeDiscount1: selected.find(x => x.FieldName == "Discount1").Status,
+                CanIncludeDiscount2: selected.find(x => x.FieldName == "Discount2").Status,
+                CanIncludeDiscount3: selected.find(x => x.FieldName == "Discount3").Status,
+                CanIncludeDiscount4: selected.find(x => x.FieldName == "Discount4").Status,
+                CanIncludeDiscount5: selected.find(x => x.FieldName == "Discount5").Status,
+                CanIncludeDiscount6: selected.find(x => x.FieldName == "Discount6").Status,
+                CanIncludeDiscount7: selected.find(x => x.FieldName == "Discount7").Status,
+                CanIncludeDiscount8: selected.find(x => x.FieldName == "Discount8").Status,
+                CanIncludePromoPrice: $("#chk_IncludePromoPrice").is(":checked"),
+                CanUseShiftBreaks: $("#chk_ShiftBreaks").is(":checked"),
+                CanUseMOQAsBrk1: $("#chk_Moq").is(":checked"),
+                CanUseGlobalCOSForProductHierarchy: toggle_value == true ? false : true,
+                CanUseLocalCOSForProductHierarchy: toggle_value == true ? true : false,
+                CanAddSODInFinalPrice: $("#chk_AddSod").is(":checked"),
+                SODInFinalPriceValue: sodvalue == NaN ? 0 : sodvalue / 100,
+                CanUseAlternateValidFromDate: $("#chk_alter_filename").is(":checked"),
+                AlternateValidFromDate: $("#input_alter_filename").val(),
+                CanShowTemplateMaterialOnly: $("#chk_ShowTemplateMaterialOnly").is(":checked"),
+                SendEmail: $("#chk_SendMail").is(":checked"),
+                ShowNotFoundTemplateMaterials: $("#chk_NotFoundMaterials").is(":checked"),
+                CanIncludeProductHierarchyOverride: $("#chk_UseProductHierarchyOverride").is(":checked")
+
+            },
+            datatype: JSON,
+            success: function (data) {
+                if (typeof data == 'number') {
+                    $.ajax({
+                        type: 'Post',
+                        url: '/PriceList/PopupStatusView',
+                        data: {
+                            StatusPrecentage: 4,
+                            StatusData: "Preparing ...",
+                            Status: "Preparing ...",
+                        },
+                        datatype: JSON,
+                        success: function (data) {
+                            $('#Processmsg').empty();
+                            $('#Processmsg').html(data);
+                            //$("#displayProcessModal").modal('show');
+                            $("#Progressbar").text("4%")
+                            $("#Progressbar").css("width", "4%")
+                        },
+                        error: function (data) { console.log(data); $("#displayProcessModal").modal('hide'); $("#RelanchModal").modal('show'); }
+                    });
+                    //downloadflag = true
+                    var SendEmail = $("#chk_SendMail").is(":checked")
+                    var showNotFoundMaterials = $("#chk_NotFoundMaterials").is(":checked")
+                    PriceFileCalculations(data, SendEmail, showNotFoundMaterials);
+                    isCompleted = false;
+                    CheckStatus(data, downloadflag)
+                }                
+                //ShowPopupMessage("Information", "Price List Generate Configuration Updated Successfully")
+                //return;
+            },
+            error: function (data) {
+                //alert(data);                
+                console.log(data);
+                //location.reload(true);
+                $("#displayProcessModal").modal('hide')
+                $("#RelanchModal").modal('show');
+            }
+        });
+        }
+
+    }
+
+        function showPopup() {
+            $("#staticBackdrop").modal('show');
+        }
+
+        function closePopup() {
+            $("#staticBackdrop").modal('hide');
+        }
+                
+
+        // function checkETLJobStatus() {
+        //     $.ajax({
+        //         type: 'Get',
+        //         url: '@Url.Action("CheckIfETLJobIsInProgress", "BackOps")',
+        //         data: {},
+        //         datatype: JSON,
+        //         success: function (data) {
+        //             if (data) {
+        //                 var ETLStartDateTime = moment(data.etlStartDateTime).format("DD-MM-YYYY HH:mm:ss");
+        //                 var ETLEndDateTime = moment(data.etlEndDateTime).format("DD-MM-YYYY HH:mm:ss");
+
+        //                 const spanElement = document.getElementById('etlStart');
+        //                 const spanElementEtlEnd = document.getElementById('etlEnd');
+
+        //                 const now = new Date();
+        //                 const aestTime = convertToAEST(now);
+
+        //                 const convertedETLStartDateTime = new Date(data.etlStartDateTime);
+        //                 const convertedETLEndDateTime = new Date(data.etlEndDateTime);
+
+        //                 const startHour = convertedETLStartDateTime.getHours();
+        //                 const startMinute = convertedETLStartDateTime.getMinutes();
+        //                 const currentHour = aestTime.getHours();
+        //                 const currentMinute = aestTime.getMinutes();
+
+        //                 if (aestTime >= convertedETLStartDateTime && aestTime <= convertedETLEndDateTime) {
+        //                     isEtlProcessing = true;
+        //                     showPopup();
+        //                 } else {
+        //                     isEtlProcessing = false;
+        //                     GeneratePriceList();
+        //                 }
+        //             }
+
+
+        //             function convertToAEST(date) {
+        //                 const AEST_OFFSET = 10 * 60;
+        //                 const localOffset = date.getTimezoneOffset();
+        //                 const aestTime = new Date(date.getTime() + (AEST_OFFSET + localOffset) * 60000);
+        //                 return aestTime;
+        //             }
+        //         },
+        //         error: function (data) {
+        //             console.log(data);
+        //                 callback(false);
+        //         }
+        //     });
+        // }
+
+    async function handleGeneratePriceClick() {
+        const button = document.getElementById("btn_GeneratePrice");
+        button.disabled = true;
+
+        try {
+            await checkETLJobStatus();
+        } catch (error) {
+            console.error("ETL check failed:", error);
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    function checkETLJobStatus() {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("CheckIfETLJobIsInProgress", "BackOps")',
+                data: {},
+                dataType: 'json',
+                success: function (data) {
+                    if (data) {
+                        const ETLStartDateTime = moment(data.etlStartDateTime).format("DD-MM-YYYY HH:mm:ss");
+                        const ETLEndDateTime = moment(data.etlEndDateTime).format("DD-MM-YYYY HH:mm:ss");
+
+                        const spanElement = document.getElementById('etlStart');
+                        const spanElementEtlEnd = document.getElementById('etlEnd');
+
+                        const now = new Date();
+                        const aestTime = convertToAEST(now);
+
+                        const convertedETLStartDateTime = new Date(data.etlStartDateTime);
+                        const convertedETLEndDateTime = new Date(data.etlEndDateTime);
+
+                        if (aestTime >= convertedETLStartDateTime && aestTime <= convertedETLEndDateTime) {
+                            isEtlProcessing = true;
+                            showPopup();
+                        } else {
+                            isEtlProcessing = false;
+                            GeneratePriceList();
+                        }
+                    }
+                    resolve(); // Resolve after success
+                },
+                error: function (error) {
+                    console.log(error);
+                    reject(error); // Reject on error
+                }
+            });
+
+            function convertToAEST(date) {
+                const AEST_OFFSET = 10 * 60;
+                const localOffset = date.getTimezoneOffset();
+                return new Date(date.getTime() + (AEST_OFFSET + localOffset) * 60000);
+            }
+        });
+    }
+
+
+
+    function PriceFileCalculations(configId, sendEmail,showNotFoundMaterials) {
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("GetExcelDetails", "PriceList")',
+            data: {
+                id: configId,
+                SendEmail: sendEmail,
+                showNotFoundMaterials: showNotFoundMaterials
+            },
+            datatype: JSON,
+            success: function (data) {
+                $("#btn_GeneratePrice").prop("disabled", false)
+                console.log("Generate price file button enabled")
+
+            },
+            error: function (data) {
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#displayProcessModal").modal('hide')
+                $("#RelanchModal").modal('show');
+            }
+        });
+    }
+    var isCompleted = false; // Guard flag - To prevent multiple download message popup
+    function CheckStatusofPriceFileCalculation(Id, downloadflag) {
+        if (isCompleted) return;
+        
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("GetGenerationStatus", "PriceList")',
+            data: { ConfigId: Id },
+            datatype: JSON,
+            success: function (resp) {
+                var data = resp
+                if (data != null) {
+                    $.ajax({
+                        type: 'Post',
+                        url: '/PriceList/PopupStatusView',
+                        data: {
+                            StatusPercentage: data.StatusPercentage,
+                            StatusData: data.StatusData,
+                            Status: data.Status
+                        },
+                        datatype: JSON,
+                        success: function (resp) {
+                            $('#Processmsg').empty()
+                            $('#Processmsg').html(resp);
+                            $("#Progressbar").text(data.StatusPercentage + "%")
+                            $("#Progressbar").css("width", data.StatusPercentage + "%")
+
+                            if (data.StatusPercentage == 100 && downloadflag == true && !isCompleted) {
+                                isCompleted = true; // Mark as completed
+                                downloadflag = false;
+                                clearInterval(intervalId);
+                                MessageForAllExcelDownload(data.PriceFileHeaderID);
+                                DownloadAllPriceFilesByPriceFileHeaderID(data);
+                                $("#displayProcessModal").modal('hide');
+                            }
+                            else if (data.StatusPercentage == 0) {
+                                clearInterval(intervalId);
+                                $("#Progressbar").hide();
+                                setTimeout(function () {
+                                    $("#displayProcessModal").modal('hide');
+                                }, 4000)
+                            }
+                        },
+                        error: function (data) {
+                            //alert(data);
+                            console.log(data);
+                            //location.reload(true);
+                            $("#displayProcessModal").modal('hide')
+                            $("#RelanchModal").modal('show');
+                        }
+                    });
+                }
+            },
+            error: function (data) {
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#displayProcessModal").modal('hide')
+                $("#RelanchModal").modal('show');
+            }
+        });
+    }
+
+    function DownloadAllPriceFilesByPriceFileHeaderID(data) {
+        window.location.href = "@Url.RouteUrl(new { Controller = "Home", Action = "DownLoadAll" })/?PriceFileHeaderID=" + data.PriceFileHeaderID + "&FileName=" + data.ZipFileName;
+    }
+
+
+    function CheckStatus(id, downloadflag) {
+        $("#Progressbar").show();
+        intervalId = setInterval(function () {
+            CheckStatusofPriceFileCalculation(id, downloadflag)
+        }, parseInt("@PFCWebAPP.Utilities.AppConfig.TimeInterval"));
+
+    }
+
+    function checkqueryPriceList() {
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("GetGenerationExcelFiles", "PriceList")',
+            data: {},
+            datatype: JSON,
+            success: function (data) { },
+            error: function (data) {
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#displayProcessModal").modal('hide')
+                $("#RelanchModal").modal('show');
+            }
+        });
+    }
+
+    $("#btnCloseModal").click(function () {
+        clearDataOnModalClose();
+    });
+
+    $("#btnCloseaddClientModal").click(function () {
+        clearDataOnModalClose();
+    });
+
+    $("#addClientToList").click(function () {
+        $("#addClientModal").modal({
+            show: false,
+            backdrop: 'static'
+        });
+        $("#addClientModal").modal('show');
+        if ($('#dp_Customertemplates').val() == 0) {
+            $("#addCustomerModalBtn").attr('disabled', true);
+        } else {
+            $("#addCustomerModalBtn").attr('disabled', false);
+        }
+    })
+
+    function clearDataOnModalClose() {
+        $("#txtAddCustomer").val('');
+        $('#dp_Customertemplates').val(0);
+    };
+
+    function MessageForAllExcelDownload(PriceFileHeaderID) {
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("MessageForAllExcelDownload", "PriceList")',
+            data: {
+                PriceFileHeaderID: PriceFileHeaderID
+            },
+            datatype: JSON,
+            success: function (data) {
+                if (data == false) {
+                    ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderInformation", "@PFCWebAPP.Utilities.AppConfig.PartialDownloadOfExcel ")
+                    return;
+                } else {
+                    ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderInformation", "@PFCWebAPP.Utilities.AppConfig.FullDownloadOfExcelSuccess")
+                    return;
+                }
+            },
+            error: function (data) {
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#displayProcessModal").modal('hide')
+                $("#RelanchModal").modal('show');
+            }
+        });
+    }
+
+    $(".cleartablefilters").on('click', function () {
+        modelgridApi.setFilterModel(null);
+        //custModelGridOptions.api.onFilterChanged();
+    })
+
+</script>
+
+
+
+
+
+
+

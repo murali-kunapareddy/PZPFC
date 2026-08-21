@@ -1,0 +1,16 @@
+﻿
+@{
+    ViewData["Title"] = "Masters";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using PFCWebAPP.Repositories.Configure.Models;
+@model TemplateModel
+
+
+<div class="container pb-4 justify-content-between">
+    <div class="col-md-10">
+        <h2>Masters</h2>
+    </div>
+</div>
+@Html.Partial("_TemplateDetails",Model)

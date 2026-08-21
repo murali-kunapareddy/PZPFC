@@ -1,0 +1,740 @@
+﻿@{
+    ViewData["Title"] = "Archived Price Lists";
+
+}
+@*@model SE.CA.PingComponent.Entities.UserInfo;*@
+@model PFCWebAPP.Repositories.Common.Models.UserDashboardViewModel
+
+
+@{
+    var PFCDownloadedFileLoaction = PFCWebAPP.Utilities.AppConfig.PFCDownloadedFileLoaction;
+    var File_Value = PFCWebAPP.Utilities.Constants.File.Trim().ToLower();
+    var DataBase_Value = PFCWebAPP.Utilities.Constants.DataBase.Trim().ToLower();
+    var ApplicationServer_Value = PFCWebAPP.Utilities.Constants.ApplicationServer.Trim().ToLower();
+    var Aws_Value = PFCWebAPP.Utilities.Constants.AWSS3Bucket.Trim().ToLower();
+
+}
+<div id="welcomeDiv">
+    <div class="text-center">
+        <h1 class="display-4">Welcome</h1>
+        @if (Model != null && @Model.objUserInfo.FirstName != null && @Model.objUserInfo.LastName != null)
+        {
+            <div class="user-name-Welcome"> @Model.objUserInfo.FirstName  @Model.objUserInfo.LastName </div>
+           if(!Model.IsPFCUser)
+            {
+                <br/>
+                <p>Please contact <a href="mailto:murali.kunapareddy@se.com?subject=[PZ PFC] Requesting Access">Administrator</a>  for required access!</p>
+            }
+        }
+    </div>
+</div>
+
+<div class="" id="pfcSummaryDiv">
+    <h2>Archived Price List</h2>
+    <div class="row pb-5">
+        <div id="LoadPfcSummaryData" style="height: 420px; width:100%;" class="ag-theme-alpine"></div>
+        <input type="text" value="@File_Value" hidden id="file_txt" />
+        <input type="text" value="@DataBase_Value" hidden id="DataBase_txt" />
+        <input type="text" value="@ApplicationServer_Value" hidden id="ApplicationServer_txt" />
+        <input type="text" value="@Aws_Value" hidden id="Aws_txt" />
+    </div>
+    <br />
+    <div class="row"><p class="note"><bold>Note: </bold> when we select any row in the archived price list, a tool tip will display with selected customers(which are used while price file generation)</p></div>
+</div>
+
+<div class="modal fade list-modal" id="customersListModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"><Strong>Customer List</Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="customersModelGrid" style="height: 250px; width:100%;" class="ag-theme-alpine"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary list-selection" data-bs-dismiss="modal">Download</button>
+                <button type="button" class="btn btn-primary email-selection" data-bs-dismiss="modal">Send Email</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="commonModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><Strong id="commonModalTitle"></Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="commonMessage">
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="displayProcessModal1" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><Strong>Process Status</Strong></h5>
+            </div>
+            <div class="modal-body" id="Processmsg1">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="processOverlay" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+<div class="modal fade" id="EmailSuccess" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailSuccessLabel"></h5>
+            </div>
+            <div class="modal-body">
+                <Strong>@PFCWebAPP.Utilities.AppConfig.EmailSentSuccess</Strong>
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="emailFailed" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailFailedLabel"></h5>
+            </div>
+            <div class="modal-body">
+                <Strong>@PFCWebAPP.Utilities.AppConfig.EmailSentFail</Strong>
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    let gridApi;
+    let modelgridApi;
+
+    var intervalId = 1000;
+
+    $(document).ready(function () {
+        $("#welcomeDiv").hide();
+        $("#pfcSummaryDiv").hide();
+        $.ajax({
+            url: '@Url.Action("GetDashboardData","Home")',
+            data: {},
+            datatype: JSON,
+            type: 'GET',
+            success: function (data) {
+                if (data.objPFCSummaryInfo != null) {
+                    LoadPfcSummaryData(data.objPFCSummaryInfo);
+                } else {
+                    $("#welcomeDiv").show();
+                    $("#pfcSummaryDiv").hide();
+                }
+            },
+            error: function (data) {
+                //alert("error");
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+
+        //Adding Edit and Delete Icons using jQuery
+        var downloadRenderer = function (params) {
+            var eDiv = document.createElement('div');
+            if (params.data.UserSESA.startsWith("API")) {
+                eDiv.innerHTML = '<i class="view-icon viewCustomers" title="View"></i>';                
+            } else {
+                eDiv.innerHTML = '<i class="view-icon viewCustomers me-3" title="View"></i> <i class="download-icon downloadData me-3" title="Download"></i> <i class="email-icon sendEmail me-3" title="Email"></i>';                
+                var eButton = eDiv.querySelectorAll('.downloadData')[0]; //download all
+                var sEmail = eDiv.querySelectorAll('.sendEmail')[0]; //customer selected email
+                eButton.addEventListener('click', function () {
+                    //alert('Downloading Data ----- Under Development');
+                    DownloadAllPriceFilesByPriceFileHeaderID(params.data);
+                });                
+                sEmail.addEventListener('click', function () {
+                    $(".list-selection").show();
+                    $(".email-selection").show();
+                    $(".list-selection").hide();
+                    $("#customersListModal").modal('show');
+                    LoadCustomersGrid(params.data);
+                    //sendEmailsToCustomers(params.data)
+                })
+            }
+            var vButton = eDiv.querySelectorAll('.viewCustomers')[0]; //customer selected download
+            vButton.addEventListener('click', function () {
+                $(".list-selection").show();
+                $(".email-selection").show();
+                $(".email-selection").hide();
+                $("#customersListModal").modal('show');
+                LoadCustomersGrid(params.data);
+            });
+            
+            return eDiv;
+        }
+
+        //Column Declaration
+        const columnDefs = [
+            { field: "PriceFileHeaderID", headerName: 'ID', width: 100, filter: true, floatingFilter: true,  tooltipField: 'PriceFileHeaderID', tooltipComponentParams: { color: '#ececec' } },
+            { field: "PriceFileCreatedDate", headerName: 'Created Date(UTC)', width: 130, filter: true, floatingFilter: true,  sortable: true, tooltipField: 'PriceFileCreatedDate', tooltipComponentParams: { color: '#ececec' } },
+            { field: "PricesActiveDate", headerName: 'Prices Active Date', width: 130, filter: true, floatingFilter: true,  sortable: true, tooltipField: 'PricesActiveDate', tooltipComponentParams: { color: '#ececec' } },
+            { field: "SalesOrganization", headerName: 'Sales Organization', width: 130, filter: true, floatingFilter: true,  sortable: true, tooltipField: 'SalesOrganization', tooltipComponentParams: { color: '#ececec' } },
+            { field: "TradeListTemplate", headerName: 'Trade List Template', width: 150, filter: true, floatingFilter: true,  sortable: true, tooltipField: 'TradeListTemplate', tooltipComponentParams: { color: '#ececec' } },
+            //{ field: "TradeListFormat", headerName: 'Trade List Format', filter: true, floatingFilter: true,  sortable: true, tooltipField: 'TradeListFormat', tooltipComponentParams: { color: '#ececec' } },
+            { field: "Customers", headerName: 'Customers', filter: true, floatingFilter: true,  sortable: true, tooltipField: 'TradeListFormat', tooltipComponentParams: { color: '#ececec' } },
+            { field: "UserSESA", headerName: 'Created By', filter: true, floatingFilter: true,  sortable: true, tooltipField: 'UserSESA', tooltipComponentParams: { color: '#ececec' } },
+            { field: "Action", filter: true, cellRenderer: downloadRenderer,  pinned: 'right', width: 100, headerClass: 'action' }
+        ];
+
+        class CustomTooltip {
+            init(params) {
+                const eGui = (this.eGui = document.createElement('div'));
+                const color = params.color || 'white';
+                const data = params.api.getDisplayedRowAtIndex(params.rowIndex).data;
+                eGui.classList.add('custom-tooltip');
+                eGui.style['background-color'] = color;
+                eGui.innerHTML = `
+                                <div class="p-2">
+                                    <table>
+                                        <thead style="font-weight:bold;">
+                                            <tr>
+                                                <td class="p-1" style="border:1px solid #ccc;">Customer Number</td>
+                                                <td class="p-1" style="border:1px solid #ccc;">Customer Name</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                `;
+                for (let i = 0; i < data.lstSelectedCustomers.length; i++) {
+                    var row = `
+                                <tr>
+                                    <td class='p-1' style="border:1px solid #ccc;">${data.lstSelectedCustomers[i].CustomerNumber}</td>
+                                    <td class='p-1' style='border:1px solid #ccc;'>${data.lstSelectedCustomers[i].CustomerName}</td>
+                                </tr>
+                                `;
+                    $(eGui).find("tbody").append(row);
+                }
+            }
+
+            getGui() {
+                return this.eGui;
+            }
+        }
+
+        // let the grid know which columns and what data to use
+        const gridOptions = {
+
+            defaultColDef: {
+                tooltipComponent: CustomTooltip,
+                suppressHeaderMenuButton: true,
+            },
+
+            columnDefs: columnDefs,
+            rowHeight: 30,
+            headerHeight: 30,
+            pagination: false,
+            paginationPageSize: 10,
+            tooltipShowDelay: 0,
+            tooltipHideDelay: 10000,
+            
+        };
+
+        // Load AG-GRID
+        function LoadPfcSummaryData(data) {
+            //gridApi.setRowData(data);
+            gridApi.setGridOption("rowData", data);
+            //gridApi.columnApi.autoSizeAllColumns();
+            gridApi.sizeColumnsToFit();
+            // setTimeout(function () {
+            //     gridOptions.api.sizeColumnsToFit();
+            // });
+            if(data.length == 0){
+                $("#welcomeDiv").show();
+                $("#pfcSummaryDiv").hide();
+            } else{
+                $("#welcomeDiv").hide();
+                $("#pfcSummaryDiv").show();
+            }
+        }
+
+        //Bind AG-Grid
+        var eGridDiv = document.querySelector('#LoadPfcSummaryData');
+        //new agGrid.Grid(eGridDiv, gridOptions);
+        gridApi = agGrid.createGrid(eGridDiv, gridOptions);
+
+    });
+
+
+    //popup config start
+    const custListModelColumnDefs = [
+        {
+            field: '',
+            checkboxSelection: true,
+            headerCheckboxSelection: true,
+            headerCheckboxSelectionFilteredOnly: true,
+            sortable: false,
+            filter: false,
+            floatingFilter: false,
+            width: 40, pinned: 'left'
+        },
+        { field: "CustomerNumber", headerName: "Customer Number" },
+        { field: "CustomerName", headerName: "Customer Name" },
+        { field: "CustomerSNO", headerName: "Customer SNO", hide: true },
+        { field: "PC1", headerName: "PC1" },
+        { field: "PC2", headerName: "PC2" },
+        { field: "PC2", headerName: "PC3" },
+        { field: "zKUNNR", headerName: "zKUNNR", hide: true },
+    ];
+
+    const custListModelGridOptions = {
+        columnDefs: custListModelColumnDefs,
+        rowData: [],
+        rowHeight: 35,
+        headerHeight: 35,
+        pagination: false,
+        rowSelection: 'multiple',
+        paginationPageSize: 5,
+        defaultColDef: {
+            sortable: true,
+            filter: true,
+            floatingFilter: true,
+            suppressHeaderMenuButton: true,
+        },
+    };
+    //popup config end
+
+    //Load popup modal grid
+    function LoadCustomersGrid(data) {
+        $("#customersModelGrid").empty()
+        const modelDiv = document.querySelector('#customersModelGrid');
+        //new agGrid.Grid(modelDiv, custListModelGridOptions);
+        modelgridApi = agGrid.createGrid(modelDiv, custListModelGridOptions);
+        // custListModelGridOptions.api.setRowData(data.lstSelectedCustomersByHeaderID);
+        // custListModelGridOptions.api.sizeColumnsToFit();
+        modelgridApi.setGridOption("rowData", data.lstSelectedCustomersByHeaderID);
+    }
+
+    function ShowPopupMessage(header, msg) {
+        $("#commonModalTitle").text("");
+        $("#commonModalTitle").text(header);
+        $("#commonMessage").text(msg);
+        $("#commonModal").modal('show');
+    }
+
+    $(".list-selection").click(function () {
+        rowData = modelgridApi.getSelectedRows();
+        if (rowData.length > 0) {
+            let priceFileHeaderId = rowData[0].PriceFileHeaderID
+            let fileName = rowData[0].PFCZipFileName
+            let selectedCustomerInfo = JSON.stringify(rowData)
+            CheckStatusFilesExistsInServer(priceFileHeaderId, fileName, selectedCustomerInfo)
+
+        }
+        else {
+            ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderValidation", "@PFCWebAPP.Utilities.AppConfig.SelectAtleastSingleCustomer");
+            return;
+        }
+
+    });
+
+    $(".email-selection").click(function () {
+        var rowData = modelgridApi.getSelectedRows();
+        if (rowData.length > 0) {
+            let priceFileHeaderId = rowData[0].PriceFileHeaderID
+            let fileName = rowData[0].PFCZipFileName
+            let selCustInfoWithPFHId = JSON.stringify(rowData)
+            CheckFilesExistsInServerForMail(priceFileHeaderId, fileName, selCustInfoWithPFHId)
+        }
+
+    })
+
+    function CheckFilesExistsInServerForMail(priceFileHeaderId, fileName, customersWithPFHId) {
+        $("#processOverlay").css("width", "100%");
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("CheckStatusOfFiles", "Home")',
+            data: {
+                PriceFileHeaderID: priceFileHeaderId,
+                FileName: fileName,
+                Customers: customersWithPFHId
+            },
+            datatype: JSON,
+            success: function (data) {
+                console.log(data)
+                let filevalue = $("#file_txt").val();
+                if (data.AllFilesExists == true && data.ArchivedFileExtractionMode == filevalue) {
+                    
+                    EmailGeneration(priceFileHeaderId, customersWithPFHId)
+                    
+                } else {
+                    
+                    ReDownloadExcelToServer(data.UserConfigId, priceFileHeaderId, fileName, customersWithPFHId,true)
+                }
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                console.log(data);
+            }
+        });
+    }
+
+    function ReDownloadExcelToServer(userConfigId, priceFileHeaderId, fileName, customersWithPFHId,Email) {
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("ReDownloadExcelForCustomersFromDB", "PriceList")', 
+            data: {
+                ConfigId: userConfigId,
+                Param_PriceFileHeaderId: priceFileHeaderId,
+                ConfigCustomers: customersWithPFHId,
+                ArchivedMode: "@PFCWebAPP.Utilities.Constants.DataBase"
+            },
+            datatype: JSON,
+            success: function (data) {
+                $("#processOverlay").css("width", "0%");
+               if(Email){
+                EmailGeneration(priceFileHeaderId, customersWithPFHId)
+               }else{
+                   window.location.href = "@Url.RouteUrl(new { Controller = "Home", Action = "DownLoadPriceFilesForSelectedCustomers" })/?SelectedCustomersInfo=" + customersWithPFHId+"&Mode="+"@PFCWebAPP.Utilities.Constants.File.Trim().ToLower()";
+               }
+
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                console.log(data);
+            }
+        });
+    }
+
+    function EmailGeneration(priceFileHeaderId, customersWithPFHId) {
+        
+        $.ajax({
+            async: true,
+            type: 'Post',
+            url: '@Url.Action("SendMailToPriceFileLocationCustomers", "Notification")',
+            data: {
+                PriceFileHeaderID: priceFileHeaderId,
+                CustomersWithPriceHeaderId: customersWithPFHId
+
+            },
+            datatype: JSON,
+            success: function (data) {
+                console.log(data)
+                if(data.length > 0){
+                    $.ajax({
+                        type: 'Post',
+                        url: '@Url.Action("GetMailStatusInNotificationHistory", "Notification")',
+                        data: {
+                            ids: data
+                        },
+                        datatype: JSON,
+                        success: function (data1) {
+                            console.log(data1)
+
+                            if (data1 == true) {
+                                $("#processOverlay").css("width", "0%");
+                                ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderInformation", "@PFCWebAPP.Utilities.AppConfig.EmailSentSuccess");
+                            } else {
+                                $("#processOverlay").css("width", "0%");
+                                ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderInformation", "@PFCWebAPP.Utilities.AppConfig.EmailSentFail");
+                            }
+
+                        },
+                        error: function (data) {
+                            $("#processOverlay").css("width", "0%");
+                            console.log(data);
+                        }
+                    });
+                }
+                else{
+                    $("#processOverlay").css("width", "0%");
+                    ShowPopupMessage("@PFCWebAPP.Utilities.AppConfig.PopUpHeaderInformation", "@PFCWebAPP.Utilities.AppConfig.EmailSentFail");
+                }
+
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                console.log(data);
+            }
+        });
+    }
+
+    function CheckStatusFilesExistsInServer(priceFileHeaderId, fileName, customersWithPFId) {
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("CheckStatusOfFiles", "Home")',
+            data: {
+                PriceFileHeaderID: priceFileHeaderId,
+                FileName: fileName,
+                Customers: customersWithPFId
+            },
+            datatype: JSON,
+            success: function (data) {
+                console.log(data)
+                
+                $("#processOverlay").css("width", "100%");
+                let filevalue = $("#file_txt").val();
+                let databasevalue = $("#DataBase_txt").val();
+                if (data.ArchivedFileExtractionMode == filevalue && data.AllFilesExists == false) {
+                    let lstCustomers = data.listCustomers
+                    ReDownloadExcelToServer(data.UserConfigId, data.PriceFileHeaderID, data.FileName, customersWithPFId,false)
+                    //CheckStatusForSelected(data.PriceFileHeaderID, lstCustomers, data.ReDownloadCount, data.FileName, customersWithPFId)
+                }
+                else if (data.ArchivedFileLocationMode == databasevalue && data.AllFilesExists == false) {
+                    let lstCustomers = data.listCustomers
+                    ReDownloadExcelToServer(data.UserConfigId, data.PriceFileHeaderID, data.FileName, customersWithPFId,false)
+                    //CheckStatusForSelected(data.PriceFileHeaderID, lstCustomers, data.ReDownloadCount, data.FileName, customersWithPFId)
+                } 
+                else if (data.ArchivedFileLocationMode == databasevalue && data.AllFilesExists == true) {
+                    let lstCustomers = data.listCustomers
+                    ReDownloadExcelToServer(data.UserConfigId, data.PriceFileHeaderID, data.FileName, customersWithPFId,false)
+                    //CheckStatusForSelected(data.PriceFileHeaderID, lstCustomers, data.ReDownloadCount, data.FileName, customersWithPFId)
+                }
+                else {
+                    $("#processOverlay").css("width", "0%");
+                    window.location.href = "@Url.RouteUrl(new { Controller = "Home", Action = "DownLoadPriceFilesForSelectedCustomers" })/?SelectedCustomersInfo=" + customersWithPFId+"&Mode="+"@PFCWebAPP.Utilities.Constants.File.Trim().ToLower()";
+                }
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                console.log(data);
+            }
+        });
+
+    }
+
+    function DownloadAllPriceFilesByPriceFileHeaderID(data) {
+        var customersWithPFHId = JSON.stringify(data.lstSelectedCustomersByHeaderID)
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("CheckStatusOfFiles", "Home")',
+            data: {
+                PriceFileHeaderID: data.PriceFileHeaderID,
+                FileName: data.TradeListTemplate,
+                Customers: JSON.stringify(data.lstSelectedCustomers)
+            },
+            datatype: JSON,
+            success: function (data1) {
+                console.log(data1)
+                let filemode = $("#file_txt").val()
+                
+                if (data1.AllFilesExists == true && data1.ArchivedFileExtractionMode == filemode) {
+                    window.location.href = "@Url.RouteUrl(new { Controller = "Home", Action = "DownloadFilesCustom" })/?PriceFileHeaderID=" + data1.PriceFileHeaderID + "&FileName=" + data1.FileName+"&Mode="+"@PFCWebAPP.Utilities.Constants.File.Trim().ToLower()";
+                } else {
+                    $("#displayProcessModal1").modal({
+                        show: false,
+                        backdrop: 'static'
+                    });
+                    $('#Processmsg1').empty();
+                    $("#displayProcessModal1").modal('show');
+                    $('#Processmsg1').html("")
+                    $("#Progressbar").text("4%")
+                    $("#Progressbar").css("width", "4%")
+                    DownloadCustomFiles(data1.PriceFileHeaderID, data1.FileName, customersWithPFHId,"@PFCWebAPP.Utilities.Constants.DataBase.Trim().ToLower()")
+                    CheckStatus(data1.PriceFileHeaderID, data1.listCustomers, data1.ReDownloadCount, data1.FileName);
+
+                }
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+
+    function DownloadCustomFiles(priceHeaderId, fileName, Customers,mode) {
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("DownloadFilesCustom", "Home")',
+            data: {
+                PriceFileHeaderID: priceHeaderId,
+                FileName: fileName,
+                Customers: Customers,
+                Mode:mode
+            },
+            datatype: JSON,
+            success: function (data) {
+                console.log(data)
+            },
+            error: function (data) {
+                console.log(data);
+
+
+            }
+        });
+    }
+
+    function checkProcessStatus(priceHeaderId, Customers, ReDownloadCount, FileName) {
+        if (Customers != "") {
+            $.ajax({
+                type: 'Post',
+                url: '@Url.Action("GetStatusForIndividualFiles", "PriceList")',
+                data: {
+                    PriceFileHeaderID: priceHeaderId,
+                    CustomersLst: JSON.stringify(Customers),
+                    ReDownloadCount: ReDownloadCount
+                },
+                datatype: JSON,
+                success: function (data) {
+                    console.log(data)
+                    $.ajax({
+                        type: 'Post',
+                        url: '/PriceList/PopupStatusView',
+                        data: {
+                            StatusPercentage: data.StatusPercentage,
+                            StatusData: data.StatusData,
+                            Status: data.Status
+
+                        },
+                        datatype: JSON,
+                        success: function (resp) {
+                            $('#Processmsg1').empty()
+                            $('#Processmsg1').html(resp);
+                            $("#Progressbar").text(data.StatusPercentage + "%")
+                            $("#Progressbar").css("width", data.StatusPercentage + "%")
+                            if (data.IsCompleted == true) {
+                                clearInterval(intervalId);
+                                window.location.href = "@Url.RouteUrl(new { Controller = "Home", Action = "DownLoadAll" })/?PriceFileHeaderID=" + data.PriceFileHeaderID + "&FileName=" + FileName;
+                                $("#displayProcessModal1").modal('hide');
+                            }
+                            else if (data.StatusPercentage == 0) {
+                                clearInterval(intervalId);
+                                $("#Progressbar").hide();
+                                setTimeout(function () {
+                                    $("#displayProcessModal1").modal('hide');
+                                }, 2000)
+                            }
+                        },
+                        error: function (data) {
+                            console.log(data);
+
+                        }
+                    });
+
+                },
+                error: function (data) {
+                    console.log(data);
+                }
+            });
+        }
+    }
+
+    function checkProcessStatusForSelected(priceHeaderId, Customers, ReDownloadCount, FileName, customersWithPFId) {
+
+        if (Customers != "") {
+            $.ajax({
+                type: 'Post',
+                url: '@Url.Action("GetStatusForIndividualFiles", "PriceList")',
+                data: {
+                    PriceFileHeaderID: priceHeaderId,
+                    CustomersLst: JSON.stringify(Customers),
+                    ReDownloadCount: ReDownloadCount
+                },
+                datatype: JSON,
+                success: function (data) {
+                    console.log(data)
+                    $.ajax({
+                        type: 'Post',
+                        url: '/PriceList/PopupStatusView',
+                        data: {
+                            StatusPercentage: data.StatusPercentage,
+                            StatusData: data.StatusData,
+                            Status: data.Status
+
+                        },
+                        datatype: JSON,
+                        success: function (resp) {
+                            $('#Processmsg1').empty()
+                            $('#Processmsg1').html(resp);
+                            $("#Progressbar").text(data.StatusPercentage + "%")
+                            $("#Progressbar").css("width", data.StatusPercentage + "%")
+                            if (data.IsCompleted == true) {
+                                clearInterval(intervalId);
+                                window.location.href = "@Url.RouteUrl(new { Controller = "Home", Action = "DownLoadPriceFilesForSelectedCustomers" })/?SelectedCustomersInfo=" + customersWithPFId+"&Mode="+"@PFCWebAPP.Utilities.Constants.File.Trim().ToLower()";
+                                $("#displayProcessModal1").modal('hide');
+                            }
+                            else if (data.StatusPercentage == 0) {
+                                clearInterval(intervalId);
+                                $("#Progressbar").hide();
+                                setTimeout(function () {
+                                    $("#displayProcessModal1").modal('hide');
+                                }, 2000)
+                            }
+                        },
+                        error: function (data) {
+                            console.log(data);
+
+                        }
+                    });
+
+                },
+                error: function (data) {
+                    console.log(data);
+                }
+            });
+        }
+    }
+
+    function CheckStatus(PriceFileHeaderID, listCustomers, ReDownloadCount, FileName) {
+        $("#Progressbar").show();
+        intervalId = setInterval(function () {
+            checkProcessStatus(PriceFileHeaderID, listCustomers, ReDownloadCount, FileName)
+        }, 5000);
+    }
+
+    function CheckStatusForSelected(PriceFileHeaderID, listCustomers, ReDownloadCount, FileName, customersWithPFId) {
+        $("#Progressbar").show();
+        intervalId = setInterval(function () {
+            checkProcessStatusForSelected(PriceFileHeaderID, listCustomers, ReDownloadCount, FileName, customersWithPFId)
+        }, 5000);
+
+    }
+
+    // Email
+    function sendEmailsToCustomers(rowdata) {
+        console.log(rowdata)
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("CheckStatusOfFiles", "Home")',
+            data: {
+                PriceFileHeaderID: rowdata.PriceFileHeaderID,
+                FileName: rowdata.TradeListTemplate,
+                Customers: JSON.stringify(rowdata.lstSelectedCustomers)
+            },
+            datatype: JSON,
+            success: function (data) {
+                console.log(data)
+
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+
+    }
+
+</script>
+
+<style>
+    .note {
+        font-style: italic;
+    }
+</style>

@@ -1,0 +1,251 @@
+﻿@using PFCWebAPP.Repositories.Configure.Models;
+
+@{
+    ViewData["Title"] = "Application Settings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model List<AppConfigSettingVM>
+@{
+    var userNameList = @Json.Serialize(Model);
+}
+
+<h2>Application Settings</h2>
+
+@if (Model != null && Model.Count > 0)
+{
+    @using (Html.BeginForm("ModifyAppConfigSetting", "Configure", FormMethod.Post, new { @class = "form-horizontal", role = "form", @id = "SaveAPPConfigSetting" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+
+            <div class="col-lg-12">
+                <div class="panel panel-danger" id="divError" style="display:none">
+                    <div class="panel-heading">
+                        <span class="panel-title">Ooops! Please watch out...</span>
+                    </div>
+                    <div class="panel-body text-danger" id="divErrorlist" style="padding-left:20px;">
+                        @Html.ValidationSummary("", new { @id = "sumError", @class = "text-danger" })
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div>
+                <table class="table table-borderless table-marginless">
+                    <tbody>
+                        @for (int i = 0; i < Model.Count; i++)
+                        {
+                            @Html.HiddenFor(modelItem => Model[i].AppConfigID)
+                            @Html.HiddenFor(modelItem => Model[i].ConfigName)
+                            @Html.HiddenFor(modelItem => Model[i].AliasName)
+                            @Html.HiddenFor(modelItem => Model[i].Description)
+                            @Html.HiddenFor(modelItem => Model[i].ConfigType)
+                            @Html.HiddenFor(modelItem => Model[i].ConfigDataType)
+                            @Html.HiddenFor(modelItem => Model[i].ConfigUIType)
+                            @Html.HiddenFor(modelItem => Model[i].ConfigMinLength)
+                            @Html.HiddenFor(modelItem => Model[i].ConfigMaxLength)
+                            @Html.HiddenFor(modelItem => Model[i].SequenceNo)
+                            @Html.HiddenFor(modelItem => Model[i].IsActive)
+                            @Html.HiddenFor(modelItem => Model[i].IsDeleted)
+                            @Html.HiddenFor(modelItem => Model[i].CreatedBy)
+                            @Html.HiddenFor(modelItem => Model[i].ModifiedBy)
+                            @Html.HiddenFor(modelItem => Model[i].CreatedDate)
+                            @Html.HiddenFor(modelItem => Model[i].ModifiedDate)
+
+
+                            <tr>
+                                <th width="20%" class="text-right">@Model[i].AliasName</th>
+                                @if (Model[i].ConfigUIType != "DropDownList" && Model[i].ConfigUIType != "Date")
+                                {
+                                    <td colspan="3">@Html.TextBoxFor(m => Model[i].ConfigValue, new { @id = "txtConfigValue", @class = "form-control input-sm full-width " , @minlength = Model[i].ConfigMinLength, @maxlength = Model[i].ConfigMaxLength })</td>
+                                }
+                                else if (Model[i].ConfigName == "ViewUserLog")
+                                {
+                                    <td colspan="2">@Html.DropDownListFor(m => Model[i].ConfigValue, new SelectList(Model[i].configOptions, "ConfigValue", "ConfigValue"), "[Choose Value]", new { @class = "form-select", @id = Model[i].ConfigName,@onchange="settingChangeValues(this.value,id)" })</td>
+                                    <td colspan="1" class="settings-view">
+                                        <i class="view-icon m-0" title="View User Log" id="viewUserLogicon"></i>
+                                    </td>
+                                }
+                                else if(Model[i].ConfigUIType == "Date")
+                                {
+                                    <td colspan="2">
+                                        @Html.TextBoxFor(m => Model[i].ConfigValue, new { @id = "pricingFutureDate", @class = "form-control input-sm full-width " , @type="date" })
+                                        @*<input type="date" id="pricingFutureDate"  class="form-control input-sm full-width">*@
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td colspan="2">@Html.DropDownListFor(m => Model[i].ConfigValue, new SelectList(Model[i].configOptions, "ConfigValue", "ConfigValue"), "[Choose Value]", new { @class = "form-select", @id = Model[i].ConfigName })</td>
+                                    <td colspan="1" class="settings-view"></td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="form-footer">
+                <ul class="list-inline">
+                    <li class="list-inline-item">
+                        <input class="btn btn-primary" type="submit" name="button" value="Update" id="btnSave" />
+
+                    </li>
+                </ul>
+            </div>
+        </div>
+    }
+}
+
+
+
+<div class="modal fade list-modal" id="viewUserLogModalPopup" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"><Strong>Users Log Info</Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">            
+                <div id="UserLogGrid" style="height: 415px; width:100%;" class="ag-theme-alpine"></div>
+            </div>
+            <div class="modal-footer text-end">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    let gridApi;
+    const columnDefs = [
+        { field: "UserLogID", filter: true, floatingFilter: true, suppressMenu: true, hide: true, },
+        { field: "UserSESA", headerName: 'SESA ID', lockPosition: 'left', lockPinned: true, filter: true, pinned: 'left', floatingFilter: true, suppressMenu: true, resizable: true, sortable: true, tooltipField: 'UserSESA' },
+        { field: "AttemptedOn", headerName: 'Login Date', filter: true, floatingFilter: true, suppressMenu: true, sortable: true, tooltipField: 'AttemptedOn', resizable: true },
+        { field: "IPAddress", headerName: 'IP Address', filter: true, floatingFilter: true, suppressMenu: true, sortable: true, tooltipField: 'IPAddress', resizable: true },
+        { field: "MachineName", headerName: 'Machine Name', filter: true, floatingFilter: true, suppressMenu: true, sortable: true, tooltipField: 'MachineName', resizable: true },
+        { field: "OperatingSystem", headerName: 'OS', filter: true, floatingFilter: true, suppressMenu: true, sortable: true, tooltipField: 'OperatingSystem', resizable: true },
+        { field: "UserHostAddress", headerName: 'Host Address', filter: true, floatingFilter: true, suppressMenu: true, sortable: true, tooltipField: 'UserHostAddress', resizable: true },
+        { field: "UserAgent", headerName: 'User Agent', filter: true, floatingFilter: true, suppressMenu: true, sortable: true, tooltipField: 'UserAgent', resizable: true }
+    ];
+
+    // let the grid know which columns and what data to use
+    const gridOptions = {
+        columnDefs: columnDefs,
+        rowHeight: 30,
+        headerHeight: 30,
+        pagination: true,
+        paginationPageSize: 10,
+        enableBrowserTooltips: true
+    };
+
+    // Load AG-GRID
+    function LoadUserLogGrid(data) {
+        gridApi.setGridOption("rowData", data);
+        //gridOptions.columnApi.autoSizeAllColumns();
+        gridApi.sizeColumnsToFit();
+        setTimeout(function () {
+            $("#viewUserLogModalPopup").modal('show')
+        });
+
+    }
+
+    $(document).ready(function () {
+        var today = new Date().toISOString().split('T')[0]
+        console.log(today);
+        $("#pricingFutureDate").attr('min', today);
+        $("#viewUserLogModalPopup").modal({
+            show: false,
+            backdrop: 'static'
+        });
+
+        var Listofsettings = @userNameList;
+        var searchIndex = Listofsettings.findIndex((s) => s.configName == "ViewUserLog")
+        if (Listofsettings[searchIndex].configName == "ViewUserLog" && Listofsettings[searchIndex].configValue == "Yes") {
+            $(".settings-view").show();
+        } else {
+            $(".settings-view").hide();
+        }
+        var searchIndex1 = Listofsettings.findIndex((s) => s.configName == "PricingFutureDate")
+        if (Listofsettings[searchIndex1].configName == "PricingFutureDate") {
+            //const originalDate = Listofsettings[searchIndex1].configValue;
+            //const convertedDate = new Date(originalDate).toLocaleDateString('en-US');
+            //console.log(convertedDate);
+            $("#pricingFutureDate").val(Listofsettings[searchIndex1].configValue);
+        }
+    });
+
+
+
+    function settingChangeValues(val, name) {
+        if (name == "ViewUserLog" && val == "Yes") {
+            $(".settings-view").show();
+        } else {
+            $(".settings-view").hide();
+        }
+    }
+
+
+
+        $("#btnSave").click(function () {
+            if ($("#divError #divErrorlist #sumError").length <= 0) {
+                $("#divErrorlist").html("<div class=\"text-danger validation-summary-errors\" data-valmsg-summary=\"true\" id=\"sumError\"><ul><li style=\"display:none\"></li></ul></div>");
+            }
+            $.validator.unobtrusive.parse($('#SaveAPPConfigSetting'))
+            $("#SaveAPPConfigSetting").validate({
+                focusInvalid: false,
+                errorLabelContainer: $("#SaveAPPConfigSetting div.sumError")
+            });
+
+            if (!$('#SaveAPPConfigSetting').valid()) {
+                var error = "";Q
+                $("#sumError ul li").each(function () {
+
+                    var data = $(this).text();
+                    $(this).replaceWith(data);
+                    error = error + "<li>" + data.replace(':', '') + "</li>";
+                });
+                error = "<ul>" + error + "</ul>";
+
+                $("#sumError").replaceWith(error);
+
+                $("#divError").show();
+                $("#btnSave").removeClass("disabled");
+
+                $('#divError').focus();
+                window.scrollTo(0, 0);
+            }
+            else {
+                $("#divError").hide();
+                $("#btnSave").addClass("disabled");
+            }
+
+    });
+
+
+    $("#viewUserLogicon").click(function () {
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("GetUsersLogData", "Configure")',
+            datatype: JSON,
+            success: function (data) {
+                //Bind AG-Grid
+                $("#UserLogGrid").empty();
+                var eGridDiv = document.querySelector('#UserLogGrid');
+                //new agGrid.Grid(eGridDiv, gridOptions);
+                gridApi = agGrid.createGrid(eGridDiv, gridOptions);
+                LoadUserLogGrid(data);
+            },
+            error: function (data) {
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    });
+
+</script>
+

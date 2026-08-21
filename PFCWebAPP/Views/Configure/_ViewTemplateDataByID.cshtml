@@ -1,0 +1,167 @@
+﻿@using PFCWebAPP.Repositories.Configure.Models;
+@model TemplateModel
+@using System.Data;
+
+
+@*<link href="~/css/SE/datatables.bootstrap.1.10.12.min.css" rel="stylesheet" />
+<link href="~/css/SE/jquery.datatables.min.css" rel="stylesheet" />
+<script src="~/js/SE/jquery.datatables.1.10.12.min.js"></script>
+<script src="~/js/SE/datatables.bootstrap.min.js"></script>*@
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
+
+@{
+    Layout = null;
+    DataTable dtTemplateTable = new DataTable();
+
+    var recordCount = 0;
+    var MAX_RECORDS = 0;
+    var SelectedTemplateMasterID = 0;
+    var SelectedTemplateName = "";
+
+    @if (Model != null && Model.SelectedTemplateDataInDataTable != null && Model.SelectedTemplateDetails != null)
+    {
+        dtTemplateTable = Model.SelectedTemplateDataInDataTable;
+        recordCount = @Model.TotalRecordsCount;
+        SelectedTemplateMasterID = @Model.SelectedTemplateDetails.TemplateMasterID;
+        SelectedTemplateName = @Model.SelectedTemplateDetails.TemplateName;
+        MAX_RECORDS = Model.DisplayMaxRecords;
+    }
+}
+
+
+
+<div class="panel-body">
+    <div class="col-md-12  col-lg-12 d-flex justify-content-end align-items-center">
+        @*<i class="refresh-icon me-3"></i>*@
+         @if(dtTemplateTable != null && dtTemplateTable.Rows.Count > 0)
+        {
+           @* <input type="button" id="btnDownload" name="btnDownload" value="Download" class="btn btn-mini btn-primary" />*@
+           // @Html.ActionLink("Download", "Export", new { TemplateMasterID = SelectedTemplateMasterID , TemplateName = SelectedTemplateName}, new { @class = "btn btn-primary" ,@id="btnDownload"})
+        }
+    </div>
+
+    <br />
+    <br />
+
+    @if (MAX_RECORDS > 0 && recordCount > MAX_RECORDS)
+    {
+        <div class="text-danger" align="center"><em>Displaying first @MAX_RECORDS records of total <span id="dataTablerecordsCount">@recordCount</span> records</em></div>
+       @* <div class="text-danger" align="center"><em>Displaying first @MAX_RECORDS records</em></div>*@
+    }
+    <table id="tblTemplateDataDromDB" class="table table-striped display">
+        @if (dtTemplateTable != null && dtTemplateTable.Rows.Count <= 0)
+        {
+            <thead>
+                <tr><th></th></tr>
+            </thead>
+            <tbody>
+                <tr><td>No Data Found</td></tr>
+            </tbody>
+        }
+        else
+        {
+            <thead>
+                <tr>
+                    @for (var i = 0; i < dtTemplateTable.Columns.Count; i++)
+                    {
+                        <th nowrap>@dtTemplateTable.Columns[i].ColumnName.ToString()</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (MAX_RECORDS > 0 && recordCount > MAX_RECORDS)
+                {
+                    for (int i = 0; i < MAX_RECORDS; i++)
+                    {
+                        <tr>
+                            @foreach (DataColumn col in dtTemplateTable.Columns)
+                            {
+                                <td nowrap>@dtTemplateTable.Rows[i][col.ColumnName].ToString()</td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    foreach (DataRow row in dtTemplateTable.Rows)
+                    {
+                        <tr>
+                            @foreach (DataColumn col in dtTemplateTable.Columns)
+                            {
+                                <td nowrap>@row[col.ColumnName].ToString()</td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        }
+    </table>
+
+</div>
+
+<div id="processOverlay3" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#processOverlay3").css("width", "0%");
+        $('#tblTemplateDataDromDB').DataTable(
+            {
+                "scrollX": true,
+                "drawCallback": function () {
+                    $(".dataTables_scrollBody").css({ "width": "100%" });
+                }
+            }
+        );
+        $('#tblTemplateDataDromDB').DataTable().draw();
+        $(".dataTables_scrollHeadInner").css({ "width": "100%" });
+        $(".dataTables_scrollBody").css({ "width": "100%" });
+        $(".table ").css({ "width": "100%" });
+    });
+
+   
+        $('#btnDownload').click(function () {
+            $("#processOverlay3").css("width", "100%");
+
+           setTimeout(function(){
+            $("#processOverlay3").css("width", "0%");
+           },2000);
+
+        ////window.location.href = './Export?TemplateMasterID=' + @SelectedTemplateMasterID + '&TemplateName=' + '@SelectedTemplateName';
+        //$.ajax({
+        //    type: 'Get',
+        //    data: { TemplateMasterID: @SelectedTemplateMasterID, TemplateName: '@SelectedTemplateName' },
+        //    url: '@Url.Action("Export", "Configure")',
+        //    datatype: JSON,
+        //    success: function (data) {
+
+        //        console.log(data);
+
+               
+
+
+        //    },
+        //    error: function (data) {
+        //        console.log(data);
+        //    }
+        //});
+
+
+        });
+
+  
+</script>
+
+
+
+
+
+
+

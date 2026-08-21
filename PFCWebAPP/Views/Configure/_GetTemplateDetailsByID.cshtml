@@ -1,0 +1,193 @@
+﻿@using PFCWebAPP.Repositories.Configure.Models;
+@model TemplateModel
+
+
+@{
+    var SelectedTemplateMasterID = 0;
+    var SelectedTemplateName = "";
+    @if (Model != null && Model.SelectedTemplateMasterID > 0)
+    {
+        SelectedTemplateMasterID = @Model.SelectedTemplateMasterID;
+        SelectedTemplateName = @Model.SelectedTemplateDetails.TemplateName;
+    }
+}
+
+<div class="row">
+    <br />
+    @if (Model != null && Model.SelectedTemplateMasterID > 0)
+    {
+        @if (Model.SelectedTemplateDetails != null)
+        {
+            @if (Model.SelectedTemplateDetails.CanUpload == true)
+            {
+                <div style="border-top:1px dashed #3dcd58"></div>
+                <div class="row" >
+                    <div class="col-md-4">
+                        <label>Choose Source File for <strong>@Model.SelectedTemplateDetails.AliasName</strong></label>
+                        <br/><br/>
+                        @Html.TextBoxFor(m => m.objTemplateSourceFileDetails.SourceFile, new { @id = "SourceExcelfile", type = "file", accept = "application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" id="rmFileNameBtn">Remove File Name</button>
+                    </div>
+                </div>
+            }
+        }
+    }
+</div>
+
+
+
+
+<div class="row">
+    <br />
+    @*<br />*@
+    @if(Model != null && Model.SelectedTemplateDataInDataTable != null)
+    {
+        <div style="border-top:1px dashed #3dcd58;margin-top:10px"></div>
+    }
+    <div id="divDynLookup" class="panel panel-default">
+
+        @if (Model != null && Model.SelectedTemplateDataInDataTable != null)
+        {
+            @Html.Partial("_ViewTemplateDataByID",Model)
+
+        }
+        @*<div id="myModalLookupTable" style="overflow:auto;">
+            <div>
+                <div id="msgLookupTable"><img src="~/images/DisplayLoading.gif" /> <h1>Please wait.. Loading data</h1></div>
+            </div>
+        </div>*@
+
+    </div>
+</div>
+
+<div id="processOverlay1" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#processOverlay1").css("width", "0%");
+        var srcFileName = $("#SourceExcelfile").val();
+        if(srcFileName == ''){
+            $("#rmFileNameBtn").attr('disabled', true);
+        }
+        $('#SourceExcelfile').change(function () {
+            if ($(this).val().length > 0) {
+                $("#rmFileNameBtn").attr('disabled', false);
+                $("#processOverlay1").css("width", "100%");
+                $('#divTemplateDetails').addClass("disabled");
+                //$("#btnUpdate").attr('disabled', false);
+                //setTimeout(function(){
+                //    $("#processOverlay1").css("width", "0%");
+                    
+                //}, 1000);
+
+                LoadExcel();
+               
+            }
+            else {
+
+            }
+        });
+
+        //Load Excel
+        function LoadExcel() {
+            //debugger;
+            var TemplateMasterID = @SelectedTemplateMasterID;
+            var TemplateName = '@SelectedTemplateName';
+
+            if (window.FormData != undefined) {
+
+                var filesUploaded = $('#SourceExcelfile').get(0);
+                var excelSources = filesUploaded.files;
+                var fileData = new FormData();
+                for (var i = 0; i < excelSources.length; i++) {
+                    fileData.append(excelSources[i].name, excelSources[i]);
+                }
+                fileData.append('TemplateMasterID', TemplateMasterID);
+                fileData.append('TemplateName', TemplateName);
+
+                $.ajax({
+                    url: '@Url.Action("_ValidateExcelDataByTemplateID", "Configure")',
+                    type: "POST",
+                    contentType: false,
+                    processData: false,
+                    async: true,
+                    data: fileData,
+                    beforeSend: function () {
+                        //$('#myModalLookupTable').show();
+                        $('#divTemplateDetails').addClass("disabled");
+                    },
+                    success: function (response, status, xhr) {
+                        $("#divDynLookup").html(response);
+                        $("#divDynLookup").show();
+                        $('#divTemplateDetails').removeClass("disabled");
+                        $("#btnUpdate").attr('disabled', false);
+                        $("#processOverlay1").css("width", "0%");
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $("#processOverlay1").css("width", "0%");
+                        $('#divTemplateDetails').removeClass("disabled");
+                        //alert("Error - divDynLookup" + XMLHttpRequest + errorThrown);
+                        //location.reload(true);
+                        $("#RelanchModal").modal('show');
+                    }
+                });
+            }
+        }
+
+        function GetTemplateDetailsByID(templateID) {
+            $.ajax({
+                type: 'Get',
+                url: '@Url.Action("_GetTemplateDetailsByID" , "Configure")',
+                data: { TemplateMasterID: templateID },
+                datatype: JSON,
+                beforeSend: function () {
+                    $("#processOverlay1").css("width", "100%");                    
+                },
+                onLoading: $("#processOverlay1").css("width", "100%"),
+                success: function (data) {
+                    $("#divDynLookup").html(data);
+                    $("#divDynLookup").show();
+                    $("#fileUpload").hide();
+                    var tableData = $("#tblTemplateDataDromDB tbody tr:first").find("td:first").text();
+                    if (tableData == "No Data Found") {
+                        $("#templateDwnloadBtn").attr('disabled', true);
+                    } else {
+                        $("#templateDwnloadBtn").attr('disabled', false);
+                    }
+                    $("#processOverlay1").css("width", "0%");
+                },
+                error: function (data) {
+                    $("#processOverlay1").css("width", "0%");
+                    //alert('error');
+                    console.log(data);
+                    //location.reload(true);
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        };
+
+        $("#rmFileNameBtn").click(function(){
+            $("#SourceExcelfile").val('');
+            $("#rmFileNameBtn").attr('disabled', true);
+            var isDisabled = $("#templateDwnloadBtn").prop('disabled');
+            if(isDisabled == true){
+                $("#divDynLookup").html('');
+                $("#divDynLookup").hide();
+            }
+            //else{
+            //    var TemplateMasterID = @SelectedTemplateMasterID;
+            //    GetTemplateDetailsByID(TemplateMasterID);
+            //}
+        });
+    });
+
+
+</script>

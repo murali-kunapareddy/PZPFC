@@ -1,0 +1,44 @@
+﻿@using PFCWebAPP.Repositories.Configure.Models
+@model ReportFormatTemplateModel
+
+@{
+    ViewData["Title"] = "ReportFormat";
+    Layout = null;
+}     
+
+<div id="UserGrid" style="height: 385px; width:100%;" class="ag-theme-alpine"></div>
+
+
+<script type="text/javascript">    
+    $(document).ready(function(){
+        var rowsData = @Html.Raw(Json.Serialize(Model.ReportFormatsDataTable));
+        //console.log(rowsData);
+        const columnDefs = [
+            { field: "fieldName", filter: true, floatingFilter: true, sortable: true },
+            { field: "excelFieldName", filter: true, floatingFilter: true, sortable: true },
+            { field: "sequenceNo", filter: true, floatingFilter: true, sortable: true }
+        ];
+
+        const gridOptions = {
+            columnDefs: columnDefs,
+            rowHeight: 30,
+            headerHeight: 30,
+            pagination: false,
+            paginationPageSize: 10,
+            onGridReady: function () {
+                //gridApi.setRowData(rowsData);
+                gridApi.setGridOption("rowData", rowsData);
+                //gridApi.sizeColumnsToFit();
+                //gridApi.autoSizeAllColumns();
+            }
+        };
+
+        var eGridDiv = document.querySelector('#UserGrid');
+        //new agGrid.Grid(eGridDiv, gridOptions);
+        gridApi = agGrid.createGrid(eGridDiv, gridOptions);
+        // setTimeout(function(){
+        //     gridApi.sizeColumnsToFit();
+        // });        
+    });
+
+</script>

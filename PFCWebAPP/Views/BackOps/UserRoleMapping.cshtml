@@ -1,0 +1,308 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewBag.Title = "User RoleMapping";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<h2>User Role Mapping</h2>
+<div class="row">
+    <div id="UserRoleMappingGrid" style="height: 365px; width:100%;" class="ag-theme-alpine mb-3"></div>
+</div>
+
+
+<div class="modal fade" id="edituser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserRole"></h5>
+                <button type="button" class="btn-close close-model" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class='container-fluid'>
+                    <div class='row' id="bindRoleMappingData">
+                    </div>
+                    <div>
+                        <p id="hideamd" class="mt-2">@PFCWebAPP.Utilities.AppConfig.NoteForNonAMDUsers</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="UpdateSesadetails()" id="updatesesa">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="processOverlay" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+
+<div class="modal fade" id="disableuser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete User</h5>
+                <button type="button" class="btn-close close-model" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class='container-fluid'>
+                    <div class='row'>
+                        <label>@PFCWebAPP.Utilities.AppConfig.UserDeleteWithOutRole</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="closeDisable">No</button>
+                <button type="button" class="btn btn-primary" onclick="DisableSesa()" id="disableusersesa">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    let gridApi;
+    $(document).ready(function () {
+        $("#hideamd").hide()
+        var editRenderer = function (params) {
+            var eDiv = document.createElement('div');
+
+            eDiv.innerHTML = '<i class="edit-icon edituser" data-bs-toggle="modal" data-bs-target="#edituser" title="Edit"></i>';
+            var eButton = eDiv.querySelectorAll('.edituser')[0];
+            eButton.addEventListener('click', function () {
+                //window.location.href = './ModifyUserRoleMapping?UserSESA=' + params.data.UserSESA;
+                $("#editUserRole").innerHTMl = ""
+                $("#hideamd").empty()
+                ModifyUserRoleMapping(params.data.UserSESA, params.data.UserName)
+            });
+            return eDiv;
+        }
+
+        //Column Declaration
+        const columnDefs = [
+            { field: "UserSESA", filter: true, floatingFilter: true,  sortable: true },
+            { field: "UserName", filter: true, floatingFilter: true,  sortable: true },
+            { field: "Email", filter: true, floatingFilter: true,  sortable: true },
+            { field: "Roles", filter: true, floatingFilter: true,  sortable: true },
+            { field: "Action", filter: true,  cellRenderer: editRenderer, pinned: 'right', headerClass: 'action', width: 100 }
+        ];
+
+        // let the grid know which columns and what data to use
+        const gridOptions = {
+            columnDefs: columnDefs,
+            rowHeight: 30,
+            headerHeight: 30,
+            pagination: false,
+            paginationPageSize: 10,
+        };
+
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("GetUserRoleMapping", "BackOps")',
+            data: {},
+            datatype: JSON,
+            onLoading: $("#processOverlay").css("width", "100%"),
+            success: function (data) {
+                LoadRoleGrid(data);
+                $("#processOverlay").css("width", "0%");
+            },
+            error: function (data) {
+                //alert(data);
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+
+
+        // Load AG-GRID
+        function LoadRoleGrid(data) {
+            // gridOptions.api.setRowData(data);
+            // gridOptions.api.sizeColumnsToFit();
+            gridApi.setGridOption("rowData", data);
+            gridApi.sizeColumnsToFit();
+            /* gridOptions.columnApi.autoSizeAllColumns();*/
+        }
+
+        //Bind AG-Grid
+        var eGridDiv = document.querySelector('#UserRoleMappingGrid');
+        //new agGrid.Grid(eGridDiv, gridOptions);
+        gridApi = agGrid.createGrid(eGridDiv, gridOptions);
+
+    });
+
+    // fetch of user mapping details by id
+    function ModifyUserRoleMapping(sesa, name) {
+        $("#editUserRole").empty().append("<Strong>Modify User Role Mapping (" + sesa.toUpperCase() + ' - ' + name.toUpperCase() + ") </Strong>")
+        //console.log(sesa.toUpperCase().includes("AMD"))
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("ModifyUserRoleMapping", "BackOps")',
+            data: { UserSESA: sesa },
+            datatype: JSON,
+            onLoading: $("#processOverlay").css("width", "100%"),
+            success: function (data) {
+                if (data != null) {
+                    $("#edituser").modal("show");
+                    var lstUserRole = data.lstUserRoleMappingModel
+                    var txt = ""
+                    $("#bindRoleMappingData").empty()
+                    var txt = ""
+                    console.log(data.lstUserRoleMappingModel);
+                    $.each(data.lstUserRoleMappingModel, function (key, value) {
+                        txt += "<div class='col-md-4 d-flex justify-content-center'><div class='form-check'>"
+                        txt += "<input class='form-check-input is-" + value.roleName.toLowerCase() + "' type ='checkbox' onchange='ChangeofCheckbox()' value='' id = 'flexCheck-" + key + "'>"
+                        txt += "<label class='form-check-label pt-1' id='lbl-" + key + "'  data-rolemapid='" + value.userRoleMappingID + "' data-roleid='" + value.roleID + "' for= 'flexCheck-" + key + "' >" + value.roleName
+                        txt += "</label></div></div> "
+                        //checked = '" + value.UserRoleMappingStatus + "'
+                    })
+                    $("#bindRoleMappingData").append(txt)
+                    $("#updatesesa").attr("userSESA", sesa)
+                    $.each(data.lstUserRoleMappingModel, function (key, value) {
+                        if (value.userRoleMappingStatus == true) {
+                            $("#flexCheck-" + key).prop('checked', true)
+                        }
+                    })
+                    $("#updatesesa").prop('disabled', true);
+                    if (sesa.toUpperCase().includes("ADM")){
+                        $(".is-admin").prop('disabled', false)
+                        $("#hideamd").hide()
+
+                    }else{
+                        $(".is-admin").prop('disabled', true)
+                        $("#hideamd").empty().append('@PFCWebAPP.Utilities.AppConfig.NoteForNonAMDUsers')
+                        $("#hideamd").show()
+                    }
+                }
+                $("#processOverlay").css("width", "0%");
+            },
+            error: function (data) {
+                //alert(data);
+                $("#processOverlay").css("width", "0%");
+                console.log(data);
+                //location.reload(true);
+            }
+        })
+
+        $(".close-model").on("click", function () {
+            $("#bindRoleMappingData").empty()
+        })
+
+    }
+
+    //update of usermapping details
+    function UpdateSesadetails() {
+
+        $("#updatesesa").prop('disabled', true)
+        checkBoxesCnt = $('#bindRoleMappingData').find(':checkbox').length
+        var usersesa = $("#updatesesa").attr("userSESA")
+        var countOfchecked = 0;
+        for (let i = 0; i < checkBoxesCnt; i++) {
+            if ($("#flexCheck-" + i).is(":checked")) {
+                countOfchecked++
+            }
+        }
+
+        userSesaHandling(checkBoxesCnt, countOfchecked)
+
+    }
+
+    function userSesaHandling(totcnt, checkedcnt) {
+        if (checkedcnt == 0) {
+            $("#edituser").modal("hide")
+            $("#disableuser").modal("show")
+        }
+        else {
+            UpdateUserMapping(totcnt)
+        }
+
+    }
+
+    function UpdateUserMapping(totcnt) {
+        var usersesa = $("#updatesesa").attr("userSESA")
+        var PortalUserRoleMapping = {
+            UserSESA: usersesa,
+            lstUserRoleMappingModel: []
+        }
+
+        for (let i = 0; i < totcnt; i++) {
+            let obj = {
+                UserRoleMappingID: parseInt($("#lbl-" + i).attr("data-rolemapid")),
+                RoleID: parseInt($("#lbl-" + i).attr("data-roleid")),
+                RoleName: $("#lbl-" + i).html(),
+                UserRoleMappingStatus: $("#flexCheck-" + i).prop("checked"),
+                UserSESA: usersesa
+            }
+            PortalUserRoleMapping.lstUserRoleMappingModel.push(obj)
+        }
+
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("ModifyUserRoleMapping", "BackOps")',
+            data: {
+                PortalUserRoleMappingDetails: PortalUserRoleMapping
+            },
+            datatype: JSON,
+            success: function (data) {
+                location.reload(true)
+                $("#updatesesa").prop('disabled', true)
+
+            },
+            error: function (data) {
+                $("#updatesesa").prop('disabled', true)
+                console.log(data)
+                //alert(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    }
+
+
+    // enable of button if any change of checkbox
+    function ChangeofCheckbox() {
+        $("#updatesesa").prop('disabled', false)
+    }
+
+    $("#closeDisable").on("click", function () {
+        $("#edituser").modal("show")
+        $("#disableuser").modal("hide")
+    })
+
+    $("#disableusersesa").on("click", function () {
+        var usersesa = $("#updatesesa").attr("userSESA")
+        //UpdateUserMapping();
+
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("DeleteorReActivateUser", "BackOps")',
+            data: {
+                UserSESA: usersesa,
+                CanReActivateUser: false
+            },
+            datatype: JSON,
+            success: function (data) {
+                location.reload(true)
+                $("#updatesesa").prop('disabled', true)
+
+            },
+            error: function (data) {
+                $("#updatesesa").prop('disabled', true)
+                console.log(data)
+                //alert(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    })
+
+</script>

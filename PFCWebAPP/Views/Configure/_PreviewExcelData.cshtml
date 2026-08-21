@@ -1,0 +1,243 @@
+﻿@using PFCWebAPP.Repositories.Configure.Models;
+@model TemplateModel
+@using System.Data;
+
+
+@*<link href="~/css/se/datatables.bootstrap.1.10.12.min.css" rel="stylesheet" />
+<link href="~/css/se/jquery.datatables.min.css" rel="stylesheet" />
+<script src="~/js/se/jquery.datatables.1.10.12.min.js"></script>
+<script src="~/js/se/datatables.bootstrap.min.js"></script>*@
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
+
+@{
+    Layout = null;
+    DataTable dtTemplateTable = new DataTable();
+    var SourceFileName = "";
+    var recordCount = 0;
+    var MAX_RECORDS = 0;
+    var SelectedTemplateMasterID = 0;
+    var SelectedTemplateName = "";
+    @if (Model != null && Model.objTemplateSourceFileDetails != null)
+    {
+        dtTemplateTable = Model.objTemplateSourceFileDetails.TemplateTable;
+        SourceFileName = Model.objTemplateSourceFileDetails.SourceFile;
+        SelectedTemplateMasterID = @Model.objTemplateSourceFileDetails.TemplateMasterID;
+        SelectedTemplateName = @Model.objTemplateSourceFileDetails.TemplateName;
+        recordCount = dtTemplateTable.Rows.Count;
+        MAX_RECORDS = Model.DisplayMaxRecords;
+    }
+}
+
+
+<div class="panel-body">
+    <div class="col-md-12  col-lg-12" style="text-align: right;">
+
+        <input type="button" id="btnUpdate" name="btnUpdate" value="Update" class="btn btn-mini btn-primary" />
+    </div>
+
+    <br />
+    <br />
+
+@*    <div id="myModalUploadExcel" style="overflow:auto;">
+        <div>
+            <div id="msgUploadExcel"><img src="~/images/DisplayLoading.gif" /> <h1>Please wait.. updating the data</h1></div>
+        </div>
+    </div>*@
+
+    <div id="processOverlay4" class="overlay">
+        <div class="text-hole-center">
+            <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+        </div>
+    </div>
+
+
+
+
+    @if (MAX_RECORDS > 0 && recordCount > MAX_RECORDS)
+    {
+        <div class="text-danger" align="center"><em>Displaying first @MAX_RECORDS records of total @recordCount records</em></div>
+        @*<div class="text-danger" align="center"><em>Displaying first @MAX_RECORDS records of total @recordCount records</em></div>*@
+    }
+    <table id="tblLookup" class="table table-striped display">
+        @if (dtTemplateTable != null && dtTemplateTable.Rows.Count <= 0)
+        {
+            <thead>
+                <tr><th>Column Headers will be loaded from the Excel</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Look up data will be loaded from the excel</td></tr>
+            </tbody>
+        }
+        else
+        {
+            <thead>
+                <tr>
+                    @for (var i = 0; i < dtTemplateTable.Columns.Count; i++)
+                    {
+                        <th nowrap>@dtTemplateTable.Columns[i].ColumnName.ToString()</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (MAX_RECORDS > 0 && recordCount > MAX_RECORDS)
+                {
+                    for (int i = 0; i < MAX_RECORDS; i++)
+                    {
+                        <tr>
+                            @foreach (DataColumn col in dtTemplateTable.Columns)
+                            {
+                                <td nowrap>@dtTemplateTable.Rows[i][col.ColumnName].ToString()</td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    foreach (DataRow row in dtTemplateTable.Rows)
+                    {
+                        <tr>
+                            @foreach (DataColumn col in dtTemplateTable.Columns)
+                            {
+                                <td nowrap>@row[col.ColumnName].ToString()</td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        }
+    </table>
+
+</div>
+
+
+
+<div class="modal fade" id="ExcelUploadSuccessModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.DataSavedSuccessfully
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="ExcelUploadFailedModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.FailedToUpload
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="toast-container" style="position: absolute; top: 10px; right: 10px; z-index:999">
+    <div class="toast bg-success" id="divUploadDataTable">
+        <div class="toast-header bg-success">
+            <strong class="me-auto">
+            </strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            Success <a href="/" class="text-white"></a>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#processOverlay4").css("width", "0%");
+
+        $("#ExcelUploadSuccessModal").modal({
+            show: false,
+            backdrop: 'static'
+        });
+
+        $('#tblLookup').DataTable(
+            {
+                "scrollX": true,
+                "drawCallback": function () {
+                    $(".dataTables_scrollBody").css({ "width": "100%" });
+                }
+            }
+        );
+        $('#tblLookup').DataTable().draw();
+        $(".dataTables_scrollHeadInner").css({ "width": "100%" });
+        $(".dataTables_scrollBody").css({ "width": "100%" });
+        $(".table ").css({ "width": "100%" });
+
+
+        $('#btnUpdate').click(function () {
+            $("#btnUpdate").addClass("disabled");
+            $.ajax({
+                url: '@Url.Action("_UpdateExcelDataIntoTemplateTableBYID", "Configure")',
+                type: "POST",
+                async: true,
+                data: {
+                    filename: '@SourceFileName',
+                    TemplateMasterID: @SelectedTemplateMasterID
+                    },
+                beforeSend: function () {
+                    //$('#msgUploadExcel').show();
+                    $("#processOverlay4").css("width", "100%");
+                    $('#divTemplateDetails').addClass("disabled");
+
+                },
+                success: function (response, status, xhr) {
+                    console.log(response);
+                    $("#btnUpdate").removeClass("disabled");
+
+                    //$('#msgUploadExcel').hide();
+                    $("#processOverlay4").css("width", "0%");
+                    $('#divTemplateDetails').removeClass("disabled");
+
+                    if (response != null && response == "Success") {
+                        $("#ExcelUploadSuccessModal").modal('show');
+                    }
+                    else {
+
+                        $("#ExcelUploadFailedModal").modal('show');
+
+                    }
+                    var tableData = $("#tblTemplateDataDromDB tbody tr:first").find("td:first").text();
+                    if (tableData == "No Data Found") {
+                        $("#templateDwnloadBtn").attr('disabled', true);
+                    } else {
+                        $("#templateDwnloadBtn").attr('disabled', false);
+                    }
+                    $("#btnUpdate").attr('disabled', true);
+                    $("#SourceExcelfile").val('');
+                    $("#rmFileNameBtn").attr('disabled', true);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+
+                    $("#btnUpdate").removeClass("disabled");
+
+                    //$('#msgUploadExcel').hide();
+                    $("#processOverlay4").css("width", "0%");
+                    $('#divTemplateDetails').removeClass("disabled");
+
+                    //$.alert("error:" + errorThrown);
+                    //location.reload(true);
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        });
+    });
+
+
+
+
+</script>

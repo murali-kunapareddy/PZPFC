@@ -1,0 +1,18 @@
+﻿@{
+    ViewBag.Title = "NotAvailable";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div>
+    <table>
+        <tr>
+            <td class="text-danger">
+                @*<h1><strong>Error 406 : Not Available</strong></h1>*@
+                <h3>
+                    @Html.Raw(ViewBag.Message)
+                </h3>
+            </td>
+        </tr>
+    </table>
+</div>
+

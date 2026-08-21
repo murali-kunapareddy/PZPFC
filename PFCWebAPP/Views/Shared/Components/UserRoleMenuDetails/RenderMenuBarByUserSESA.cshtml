@@ -1,0 +1,252 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{ }
+
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor Accessor
+@model PFCWebAPP.Repositories.BackOps.Models.UserRoleMenuModel
+
+@if (PFCWebAPP.Utilities.AppConfig.ShowBanner == "1")
+{
+    <div class="ribbon">
+        <a href="/home">@PFCWebAPP.Utilities.AppConfig.ApplicationMode</a>
+    </div>
+}
+
+<div>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="~/images/logo-light.svg" alt="" width="150">
+                @*@if (@PFCWebAPP.Utilities.AppConfig.ShowBanner == "1")
+                {<
+                <span class="rotated">
+                <em>@PFCWebAPP.Utilities.AppConfig.ApplicationMode</em>
+                </span>
+                }*@
+            </a>
+
+            <span class="app-brand text-white">@PFCWebAPP.Utilities.AppConfig.ApplicationName</span>
+            <div class="text-white ms-5" style="text-align: right;width: 50%;">
+                <span style="font-size: 11px;display: block;padding-bottom: 3px;font-weight:bold" id="etlInfo"></span>
+                <span style="font-size: 11px;display: block;padding-bottom: 3px;font-weight:bold" id="etlStart"></span>
+                <span style="font-size: 11px;display: block;font-weight:bold" id="etlEnd"></span>
+            </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse mx-3 justify-content-end" id="navbarSupportedContent">
+                <div class="d-flex">
+                    <ul class="list-unstyled" style="margin:0px;">
+                        @if (Model != null)
+                        {
+                            <li class="nav-item dropdown" style="list-style:none;">
+                                <a class="text-white text-decoration-none mx-1 d-flex user-name-box float-start" href="#" id="navbarDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="user-name">@Model.UserName</div>
+                                    <img src="~/images/user-icon.png" class="ml-2" height="40" />
+                                </a>
+
+                                @if (Model.lstRoles != null && Model.lstRoles.Count() > 0)
+                                {
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                        @foreach (var Roles in Model.lstRoles.OrderBy(x => x.RoleID))
+                                        {
+                                            if (@Accessor.HttpContext.Session.GetString("SelectedRoleID") != null && Convert.ToInt32(@Accessor.HttpContext.Session.GetString("SelectedRoleID")) == Roles.RoleID)
+                                            {
+                                                <li class="dropdown-item">@Roles.RoleName</li>
+                                            }
+                                            else
+                                            {
+                                                <li>@Html.ActionLink(@Roles.RoleName, "SwitchRole", "Account", new { RoleID = @Roles.RoleID }, new { @class = "dropdown-item" })</li>
+                                            }
+                                            @*<li><a class="dropdown-item" href="~/Home/Index">@Roles.RoleName</a></li>*@
+                                        }
+                                    </ul>
+                                }
+
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+
+    <div class="menu-bar">
+        <ul class="menu-list">
+            @if (Model.lstMenus != null)
+            {
+                <li class="menu-bar-logo"><a href="~/Home/Index"><img src="~/Images/logo-light.svg" alt="" width="120"></a></li>
+                <li><a class="home-icon" href="~/Home/Index"><img src="~/Images/home.svg" /></a></li>
+
+                var ParentMenus = Model.lstMenus.Where(s => s.ParentID == 0).ToList();
+                foreach (var ParentMenu in ParentMenus.OrderBy(x => x.SortOrder).Distinct())
+                {
+                    var ChildMenus = Model.lstMenus.Where(s => s.ParentID == ParentMenu.MenuID).ToList();
+                    if (ChildMenus.Count > 0)
+                    {
+                        <li class="multi-level-menu">
+                            <a href="#">
+                                @ParentMenu.AliasName<i class="down-arrow"></i>
+                            </a>
+                            <ul class="sub-menu">
+                                @{
+                                    foreach (var ChildMenu in ChildMenus.OrderBy(x => x.SortOrder))
+                                    {
+                                        if (ChildMenu.ControllerName != null && ChildMenu.ControllerName.Trim() != "")
+                                        {
+                                            if (ChildMenu.ActionName != null && ChildMenu.ActionName.Trim() != "")
+                                            {
+                                                if (ChildMenu.HrefVal != null && ChildMenu.HrefVal.Trim() != "")
+                                                {
+                                                    <li><a href="~/@ChildMenu.ControllerName/@ChildMenu.ActionName/@ChildMenu.HrefVal"> @ChildMenu.AliasName</a></li>
+                                                }
+                                                else
+                                                {
+                                                    <li><a href="~/@ChildMenu.ControllerName/@ChildMenu.ActionName"> @ChildMenu.AliasName</a></li>
+                                                }
+
+                                            }
+                                            else
+                                            {
+                                                <li><a href="~/@ChildMenu.ControllerName"> @ChildMenu.AliasName</a></li>
+                                            }
+                                        }
+                                        else
+                                        {
+
+                                            <li><a href="#"> @ChildMenu.AliasName</a></li>
+
+                                        }
+
+                                    }
+                                }
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+
+                        if (ParentMenu.ControllerName != null && ParentMenu.ControllerName.Trim() != "")
+                        {
+                            if (ParentMenu.ActionName != null && ParentMenu.ActionName.Trim() != "")
+                            {
+                                if (ParentMenu.HrefVal != null && ParentMenu.HrefVal.Trim() != "")
+                                {
+                                    <li><a href="~/@ParentMenu.ControllerName/@ParentMenu.ActionName/@ParentMenu.HrefVal"> @ParentMenu.AliasName</a></li>
+                                }
+                                else
+                                {
+                                    <li><a href="~/@ParentMenu.ControllerName/@ParentMenu.ActionName"> @ParentMenu.AliasName</a></li>
+                                }
+
+                            }
+                            else
+                            {
+                                <li><a href="~/@ParentMenu.ControllerName"> @ParentMenu.AliasName</a></li>
+                            }
+                        }
+                        else
+                        {
+                            <li>
+                                <a href="#">@ParentMenu.AliasName</a>
+                            </li>
+
+                        }
+
+
+
+                    }
+
+                }
+
+            }
+        </ul>
+        <ul>
+        </ul>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+    function checkETLJobStatus(){
+        $.ajax({
+            type: 'Get',
+            url: '@Url.Action("CheckIfETLJobIsInProgress", "BackOps")',
+            data: {},
+            datatype: JSON,
+            success: function (data) {
+                    if (data) {
+                        var ETLStartDateTime = moment(data.etlStartDateTime).format("DD-MM-YYYY HH:mm:ss");
+                        var ETLEndDateTime = moment(data.etlEndDateTime).format("DD-MM-YYYY HH:mm:ss");
+
+                        const spanElement = document.getElementById('etlStart');
+                        const spanElementEtlEnd = document.getElementById('etlEnd');
+                        const spanElementYetToStart = document.getElementById('etlYetTostart');
+
+                        
+
+                        const now = new Date();
+                        const aestTime = convertToAEST(now);
+
+                        const convertedETLStartDateTime = new Date(data.etlStartDateTime);
+                        const convertedETLEndDateTime = new Date(data.etlEndDateTime);
+
+                        const startHour = convertedETLStartDateTime.getHours();
+                        const startMinute = convertedETLStartDateTime.getMinutes();
+                        const currentHour = aestTime.getHours();
+                        const currentMinute = aestTime.getMinutes();
+
+                        const EtlCurrentHour = @PFCWebAPP.Utilities.AppConfig.EtlCurrentHour;
+                        const EtlStartHour = @PFCWebAPP.Utilities.AppConfig.EtlStartHour;
+
+                        const timeZoneText = data.timeZone ? `(${data.timeZone})` : '';
+                        const etlScheduledText = `ETL is scheduled at ${ETLStartDateTime} ${timeZoneText}`;
+                        const etlAboutToStartText = `ETL is about to start at: ${ETLStartDateTime} ${timeZoneText}`;
+                        const etlStartText = `ETL Start: ${ETLStartDateTime} ${timeZoneText}`;
+                        const etlEndText = `ETL End: ${ETLEndDateTime} ${timeZoneText}`;
+                        //debugger;
+                        if (currentHour === EtlCurrentHour && startHour === EtlStartHour && startMinute === 0) {
+                            spanElement.innerHTML = etlScheduledText;
+                            spanElement.spanElementYetToStart = `ETL is about to start in an hour ${ETLStartDateTime} ${timeZoneText}`;
+                            $("#staticBackdrop1").modal('show');
+                        } else if (aestTime >= convertedETLStartDateTime && aestTime <= convertedETLEndDateTime) {
+                            spanElement.innerHTML = etlStartText;
+                            spanElementEtlEnd.innerHTML = 'ETL End: In Progress';
+                        } else if (aestTime <= convertedETLStartDateTime) {
+                            spanElement.spanElementYetToStart = etlAboutToStartText;
+                        } else {
+                            spanElement.innerHTML = etlStartText;
+                            spanElementEtlEnd.innerHTML = etlEndText;
+                        }
+                    }
+
+
+                function convertToAEST(date) {
+                    const AEST_OFFSET = 10 * 60;
+                    const localOffset = date.getTimezoneOffset();
+                    const aestTime = new Date(date.getTime() + (AEST_OFFSET + localOffset) * 60000);
+                    return aestTime;
+                }
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+
+    checkETLJobStatus();
+    setInterval(checkETLJobStatus, 600000);
+
+    });
+    
+</script>
+
+

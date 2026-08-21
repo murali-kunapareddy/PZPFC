@@ -1,0 +1,165 @@
+is_global = true
+build_property.TargetFramework = net6.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = PFCWebAPP
+build_property.RootNamespace = PFCWebAPP
+build_property.ProjectDir = C:\02 Development\PFCTool\PFCWebAPP\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 6.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = true
+build_property.MSBuildProjectDirectory = C:\02 Development\PFCTool\PFCWebAPP
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 6.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/BackOps/AddUser.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja09wc1xBZGRVc2VyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/BackOps/ModifyUserRoleMapping.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja09wc1xNb2RpZnlVc2VyUm9sZU1hcHBpbmcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/BackOps/Roles.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja09wc1xSb2xlcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/BackOps/UserRoleMapping.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja09wc1xVc2VyUm9sZU1hcHBpbmcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/BackOps/Users.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja09wc1xVc2Vycy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/ApplicationSettings.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXEFwcGxpY2F0aW9uU2V0dGluZ3MuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/CustomerTemplates.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXEN1c3RvbWVyVGVtcGxhdGVzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/Masters.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXE1hc3RlcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/ReportContent.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXFJlcG9ydENvbnRlbnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/ReportFormat.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXFJlcG9ydEZvcm1hdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/_ColsMismatch.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXF9Db2xzTWlzbWF0Y2guY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/_GetTemplateDetailsByID.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXF9HZXRUZW1wbGF0ZURldGFpbHNCeUlELmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/_InValidExcelData.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXF9JblZhbGlkRXhjZWxEYXRhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/_PreviewExcelData.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXF9QcmV2aWV3RXhjZWxEYXRhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/_TemplateDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXF9UZW1wbGF0ZURldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/_ViewReportFormatDataByID.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXF9WaWV3UmVwb3J0Rm9ybWF0RGF0YUJ5SUQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Configure/_ViewTemplateDataByID.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uZmlndXJlXF9WaWV3VGVtcGxhdGVEYXRhQnlJRC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Error/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXJyb3JcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Error/Partials/_Error401.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXJyb3JcUGFydGlhbHNcX0Vycm9yNDAxLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Error/Partials/_Error403.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXJyb3JcUGFydGlhbHNcX0Vycm9yNDAzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Error/Partials/_Error404.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXJyb3JcUGFydGlhbHNcX0Vycm9yNDA0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Error/Partials/_Error500.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXJyb3JcUGFydGlhbHNcX0Vycm9yNTAwLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Notification/History.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTm90aWZpY2F0aW9uXEhpc3RvcnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/PriceList/GeneratePriceFile.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJpY2VMaXN0XEdlbmVyYXRlUHJpY2VGaWxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/PriceList/_PopupStatusView.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJpY2VMaXN0XF9Qb3B1cFN0YXR1c1ZpZXcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Shared/Components/UserRoleMenuDetails/RenderMenuBarByUserSESA.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNcVXNlclJvbGVNZW51RGV0YWlsc1xSZW5kZXJNZW51QmFyQnlVc2VyU0VTQS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Shared/_BlankLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9CbGFua0xheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/UnAuthorised/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVW5BdXRob3Jpc2VkXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/UnAuthorised/NotAvailable.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVW5BdXRob3Jpc2VkXE5vdEF2YWlsYWJsZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/UnAuthorised/UnAuthorisedUserRole.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVW5BdXRob3Jpc2VkXFVuQXV0aG9yaXNlZFVzZXJSb2xlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/02 Development/PFCTool/PFCWebAPP/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-ib1wd216ud

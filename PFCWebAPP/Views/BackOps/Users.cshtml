@@ -1,0 +1,408 @@
+﻿@{
+    ViewData["Title"] = "Users";
+}
+@model PFCWebAPP.DatabaseContext.Models.CustomTables.UserMaster
+
+
+<div class="row justify-content-between">
+    <div class="col-md-10">
+        <h2>Users</h2>
+    </div>
+    <div class="col-md-2 text-end">
+        <form>
+            <button class="btn btn-primary float-right" asp-controller="BackOps" asp-action="AddUser" asp-route-UserSESA="">Add User</button>
+        </form>
+        @*<p align="right"><input type="button" id="btnAddUser" name="btnAddUser" value="Add User" class="btn btn-primary float-right"></p>*@
+    </div>
+</div>
+<br />
+<div class="row pb-5">
+    <div id="UserGrid" style="height: 420px; width:100%;" class="ag-theme-alpine"></div>
+</div>
+
+<div class="modal fade" id="deleteConfirmation" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"><Strong>Delete User</Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.ConfirmDeletePortalUser
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" id="deleteYesPortalUser" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade" id="deletionSuccess" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.UserDeletedSuccess
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" id="deleteYesPortalUser" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary" onclick="ReloadPage()">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="updationSuccess" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.UserDetailsUpdatedSuccess
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary" onclick="ReloadPage()">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editUser" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUser">Modify User</h5>
+                <button type="button" class="btn-close close-model" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class='container-fluid'>
+                    @using (Html.BeginForm("UpdateUser", "BackOps", FormMethod.Post, new { @class = "form-horizontal", role = "form", @id = "UpdateUserForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="row">
+
+                            <div class="col-lg-12">
+                                <div class="panel panel-danger" id="divError" style="display:none">
+                                    <div class="panel-heading">
+                                        <span class="panel-title">Ooops! Please watch out...</span>
+                                    </div>
+                                    <div class="panel-body text-danger" id="divErrorlist" style="padding-left:20px;">
+                                        @Html.ValidationSummary("", new { @id = "sumError", @class = "text-danger" })
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="form-group col-lg-6">
+
+                                @Html.HiddenFor(m => m.CreatedBy, new {@id = "CreatedBy"})
+                                @Html.HiddenFor(m => m.CreatedDate, new {@id = "CreatedDate"})
+                                @Html.HiddenFor(m => m.ModifiedBy, new {@id = "ModifiedBy"})
+                                @Html.HiddenFor(m => m.ModifiedDate, new {@id = "ModifiedDate"})
+                                @Html.HiddenFor(m => m.UserMasterID, new {@id = "UserMasterID"})
+
+                                @Html.LabelFor(m => m.UserSESA)
+
+                                <sup class="text-danger">*</sup>
+                                @Html.TextBoxFor(m => m.UserSESA, new { @class = "form-control", @id = "UserSESA", placeholder = "Enter UserSESA", disabled = "disabled" })
+                                @Html.HiddenFor(m => m.UserSESA)
+
+                            </div>
+                            <div class="form-group col-lg-6">
+                                @Html.LabelFor(m => m.FirstName)<sup class="text-danger">*</sup>
+                                @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @id = "FirstName", placeholder = "Enter First Name" })
+                            </div>
+                            <div class="form-group col-lg-6">
+                                <label for="lastName">Last Name</label>
+                                @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @id = "LastName", placeholder = "Enter Last Name" })
+                            </div>
+                            <div class="form-group col-lg-6">
+                                @Html.LabelFor(m => m.Email)<sup class="text-danger">*</sup>
+                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @id = "Email", placeholder = "Enter Email Address" })
+                            </div>
+                            <div class="form-group col-lg-6">
+                                @Html.LabelFor(m => m.Department)
+                                @Html.TextBoxFor(m => m.Department, new { @class = "form-control", @id = "Department", placeholder = "Enter Dept Name" })
+                            </div>
+                            <div class="form-group col-lg-6">
+                                @Html.LabelFor(m => m.Country)<sup class="text-danger">*</sup>
+                                @Html.TextBoxFor(m => m.Country, new { @class = "form-control", @id = "Country", placeholder = "Enter Country" })
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="UpdateBtn">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="processOverlay" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+
+
+
+
+
+@if (ViewBag.DeleteErrorMessage != null)
+{
+    <script type="text/javascript">
+        window.onload = function () {
+            alert("@ViewBag.DeleteErrorMessage");
+        };
+    </script>
+}
+
+<script type="text/javascript">
+    let gridApi;
+    $(document).ready(function () {
+        $("#deleteConfirmation").modal({
+            show: false,
+            backdrop: 'static'
+        });
+        $("#deletionSuccess").modal({
+            show: false,
+            backdrop: 'static'
+        });
+        $("#editUser").modal({
+            show: false,
+            backdrop: 'static'
+        });
+        $("#updationSuccess").modal({
+            show: false,
+            backdrop: 'static'
+        });
+
+        //Adding Edit and Delete Icons using jQuery
+        var editRenderer = function (params) {
+            var eDiv = document.createElement('div');
+            eDiv.innerHTML = '<i class="edit-icon edituser" title="Edit"></i> <i class="delete-icon ms-3 deleteuser" title="Delete"></i>';
+            var eButton = eDiv.querySelectorAll('.edituser')[0];
+            var dButton = eDiv.querySelectorAll('.deleteuser')[0];
+
+            eButton.addEventListener('click', function () {
+                $("#editUser").modal('show');
+                GetUserDetailsForModification(params.data.UserSESA);
+            });
+            dButton.addEventListener('click', function () {
+                $('#deleteYesPortalUser').attr('UserSESA', params.data.UserSESA);
+                $("#exampleModalLabel").empty().append("<Strong>Delete User (" + params.data.UserSESA.toUpperCase() + ' - ' + params.data.FirstName.toUpperCase() + ' ' + params.data.LastName.toUpperCase() + ") </Strong>")
+                $("#deleteConfirmation").modal('show');
+            });
+            return eDiv;
+        }
+
+        $("#processOverlay").css("width", "100%");
+
+        GetUsersList();
+
+
+
+        //Column Declaration
+        const columnDefs = [
+            { field: "UserMasterID", filter: true, floatingFilter: true,  hide: true, },
+            { field: "UserSESA", headerName: 'SESA ID', lockPosition: 'left', lockPinned: true, filter: true, pinned: 'left', floatingFilter: true,  resizable: true, sortable: true },
+            { field: "FirstName", headerName: 'First Name', filter: true, floatingFilter: true,  sortable: true },
+            { field: "LastName", headerName: 'Last Name', filter: true, floatingFilter: true,  sortable: true },
+            { field: "Email", headerName: 'Email Address', filter: true, floatingFilter: true,  sortable: true },
+            { field: "Department", headerName: 'Department', filter: true, floatingFilter: true,  sortable: true },
+            { field: "Country", filter: true, floatingFilter: true,  sortable: true },
+            { field: "Action", filter: true, cellRenderer: editRenderer,  pinned: 'right', width: 100, headerClass: 'action' }
+        ];
+
+        //ajax call to fetch the list of Users
+
+        function GetUsersList() {
+            $.ajax({
+                type: 'Get',
+                url: '@Url.Action("GetUsers", "BackOps")',
+                datatype: JSON,
+                success: function (data) { 
+                    LoadUserGrid(data);
+                    $("#processOverlay").css("width" , "0%");
+                },
+                error: function (data) {
+                    //alert(data);
+                    $("#processOverlay").css("width" , "0%");
+                    console.log(data);
+                    //location.reload(true);
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        }
+
+
+        // let the grid know which columns and what data to use
+        const gridOptions = {
+            columnDefs: columnDefs,
+            rowHeight: 30,
+            headerHeight: 30,
+            pagination: false,
+            paginationPageSize: 10,
+        };
+
+        // Load AG-GRID
+        function LoadUserGrid(data) {
+            //gridOptions.api.setRowData(data);
+            gridApi.setGridOption("rowData", data);
+            gridApi.sizeColumnsToFit();
+            // gridOptions.columnApi.autoSizeAllColumns();
+            // setTimeout(function () {
+            //     gridOptions.api.sizeColumnsToFit();
+            // });
+        }
+
+        //Bind AG-Grid
+        var eGridDiv = document.querySelector('#UserGrid');
+        //new agGrid.Grid(eGridDiv, gridOptions);
+        gridApi = agGrid.createGrid(eGridDiv, gridOptions);
+
+        //on deleteConfirmation
+        $('#deleteYesPortalUser').click(function () {
+            $.ajax({
+                type: 'Post',
+                url: '@Url.Action("DeleteorReActivateUser", "BackOps")',
+                data: { UserSESA: $('#deleteYesPortalUser').attr('UserSESA'), CanReActivateUser: false }, // IsDeletedUser = false while performing delete Action
+                datatype: JSON,
+                onLoading: $("#processOverlay").css("width", "100%"),
+                success: function (data) {
+                    if (data != null && data == "success") {
+                        $("#deletionSuccess").modal('show');
+                        $("#processOverlay").css("width", "0%");
+                    }
+                    else {
+                        $("#processOverlay").css("width", "0%");
+                        alert(data);
+                    }
+                },
+                error: function (data) {
+                    $("#processOverlay").css("width", "0%");
+                    //alert(data);
+                    console.log(data);
+                    //location.reload(true);
+                    $("#RelanchModal").modal('show');
+                }
+            });
+            $("#deleteConfirmation").modal('hide');
+        });
+    });
+
+    function GetUserDetailsForModification(userSESA) {
+        $.ajax({
+            url: '@Url.Action("ModifyUser", "BackOps")',
+            data: { UserSESA: userSESA },
+            datatype: JSON,
+            onLoading: $("#processOverlay").css("width", "100%"),
+            success: function (data) {
+                console.log(data);
+                $("#UserSESA").prop('value', data.userSESA);
+                $("#FirstName").val(data.firstName);
+                $("#LastName").val(data.lastName);
+                $("#Email").val(data.email);
+                $("#Department").val(data.department);
+                $("#Country").val(data.country);
+                $("#UserMasterID").val(data.userMasterID);
+                $("#CreatedBy").val(data.createdBy);
+                $("#CreatedDate").val(data.createdDate);
+
+
+                $("#UpdateBtn").attr("disabled", true);
+                $("#processOverlay").css("width", "0%");
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                //alert('error');
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    };
+
+    function ReloadPage() {
+        location.reload(true);
+    };
+
+    $("#UpdateBtn").click(function () {
+        if ($("#divError #divErrorlist #sumError").length <= 0) {
+            $("#divErrorlist").html("<div class=\"text-danger validation-summary-errors\" data-valmsg-summary=\"true\" id=\"sumError\"><ul><li style=\"display:none\"></li></ul></div>");
+        }
+        $.validator.unobtrusive.parse($('#UpdateUserForm'));
+        $("#UpdateUserForm").validate({
+            focusInvalid: false,
+            errorLabelContainer: $("#UpdateUserForm div.sumError")
+        });
+        if (!$('#UpdateUserForm').valid()) {
+            var error = "";
+            $("#sumError ul li").each(function () {
+
+                var data = $(this).text();
+                $(this).replaceWith(data);
+                error = error + "<li>" + data.replace(':', '') + "</li>";
+            });
+            error = "<ul>" + error + "</ul>";
+
+            $("#sumError").replaceWith(error);
+
+            $("#divError").show();
+            $("#UpdateBtn").removeClass("disabled");
+
+            $('#divError').focus();
+            window.scrollTo(0, 0);
+        }
+        else {
+            $("#divError").hide();
+
+            var UserSESA = $("#UserSESA").val();
+            var FirstName = $("#FirstName").val();
+            var LastName = $("#LastName").val();
+            var Email = $("#Email").val();
+            var Department = $("#Department").val();
+            var Country = $("#Country").val();
+            var UserMasterId = $("#UserMasterID").val();
+            var CreatedBy = $("#CreatedBy").val();
+            var CreatedDate = $("#CreatedDate").val();
+
+            $.ajax({
+                url: '@Url.Action("UpdateUser", "BackOps")',
+                data: {
+                    UserSESA: UserSESA, FirstName: FirstName, LastName: LastName, Email: Email, Department: Department,
+                    Country: Country, UserMasterID: UserMasterId, CreatedBy: CreatedBy, CreatedDate: CreatedDate, ModifiedDate: CreatedDate, ModifiedBy: null
+                },
+                type: 'POST',
+                datatype: JSON,
+                onLoading: $("#processOverlay").css("width", "100%"),
+                success: function (data) {
+                    if (data == "success") {
+                        $("#editUser").modal('hide');
+                        $("#updationSuccess").modal('show');
+                        $("#processOverlay").css("width", "0%");
+                    }
+                },
+                error: function (data) {
+                    //alert("error");
+                    console.log(data);
+                    //location.reload(true);
+                    $("#processOverlay").css("width", "0%");
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        }
+    });
+
+    $('#UpdateUserForm').change(function () {
+        $("#UpdateBtn").attr('disabled', false);
+    });
+</script>

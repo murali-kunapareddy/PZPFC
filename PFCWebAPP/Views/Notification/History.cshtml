@@ -1,0 +1,421 @@
+﻿
+@{
+    ViewData["Title"] = "Notification History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+
+
+<div class="container pb-4 justify-content-between">
+    <div class="col-md-10">
+        <h2>Notification History</h2>
+    </div>
+</div>
+
+<div class="row pb-5">
+    <div id="NotifiHistoryGrid" style="height: 420px; width:100%;" class="ag-theme-alpine"></div>
+</div>
+
+<div id="processOverlay" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+<div class="modal fade" id="resendNotiySuccess" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resendNotiySuccessLabel"></h5>
+            </div>
+            <div class="modal-body">
+                <Strong>@PFCWebAPP.Utilities.AppConfig.NotificationReSentSuccess</Strong>
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="resendNotiyFailed" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resendNotiyFailedLabel"></h5>
+            </div>
+            <div class="modal-body">
+                <Strong>@PFCWebAPP.Utilities.AppConfig.NotificationReSentFailed</Strong>
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><Strong>Notification Preview</Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="commonMessage">
+                <div class="row">
+                    <div>
+                        <p id="commonMsg_Subject"></p><br />
+                        <div class="row">
+                            <div id="commonMsg_From" class="col-auto">
+                                <p><strong>From: </strong>PFC Notifications <DoNotReply.APOLLO@alerts.se.com></p>
+                            </div>
+                            <div id="commonMsg_SentOn" class="col-auto">Sent On</div>
+                        </div><br />
+                        <p id="commonMsg_To"></p>
+                        <p id="commonMsg_cc"></p><br />
+                        <p id="commonMsg_attachment"></p><br />
+                        <input type="hidden" id="commonMsg_notificationID"/>
+                        <input type="hidden" id="commonMsg_actualFileName" />
+                        <input type="hidden" id="commonMsg_encryptedFileName" />
+                        <input type="hidden" id="commonMsg_pricefileHeaderID" />
+                    </div>
+                    <br />
+                    <div id="commonMsg_Body">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" class="btn btn-primary" id="modalSendBtn">ReSend</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reSendConfirmationModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"><Strong>Resend Notification</Strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @PFCWebAPP.Utilities.AppConfig.ResendNotificationConfirmation
+            </div>
+            <div class="modal-footer text-end">
+                <button type="button" id="reSendYes" class="btn btn-primary">Yes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    let gridApi;
+    var SelectedRowdata = "";
+
+    //Adding Resend Icons using jQuery
+    var resendRenderer = function (params) {
+        var eDiv = document.createElement('div');
+        if (params.data.CreatedBy.startsWith("API")) {
+            eDiv.innerHTML = '<i class="view-icon me-3 previewEmail"  title="View"></i>';
+            var previewButton = eDiv.querySelectorAll('.previewEmail')[0];
+            previewButton.addEventListener('click', function () {
+                checkIfGeneratedExcelFileExists(params.data, 'preview');
+            });
+        } else {
+            eDiv.innerHTML = '<i class="view-icon me-3 previewEmail"  title="View"></i><i class="email-icon resendemail" title="Resend"></i>';
+            var eButton = eDiv.querySelectorAll('.resendemail')[0];
+            var previewButton = eDiv.querySelectorAll('.previewEmail')[0];
+
+            eButton.addEventListener('click', function () {
+                viewResendConfirmation(params.data);
+            });
+
+            previewButton.addEventListener('click', function () {
+                checkIfGeneratedExcelFileExists(params.data, 'preview');
+            });
+        }
+
+        
+        return eDiv;
+    }
+
+    //Column Declaration
+    const columnDefs = [
+        { field: "NotificationHistoryID", filter: true, floatingFilter: true,  hide: true, },
+        { field: "NotificationDate", headerName: 'Notification Date (UTC)', lockPosition: 'left', lockPinned: true, filter: true, pinned: 'left', floatingFilter: true,  resizable: true, sortable: true, tooltipField: 'NotificationDate' },
+        {
+            field: "Subject", headerName: 'Customer Number', filter: true, floatingFilter: true, sortable: true, tooltipField: 'Subject', valueGetter: (params) => {
+                let subject = params.data.Subject;
+                let startIndex, endIndex, extractedString;
+
+                if (subject.includes('[NEW Price File]')) {
+                    startIndex = subject.indexOf(':') + 1;
+                    endIndex = subject.indexOf('/', startIndex);
+                    extractedString = subject.slice(startIndex, endIndex);
+                }
+                else if (subject.includes('-') && subject.includes('/')) {
+                    startIndex = subject.indexOf('-') + 1;
+                    endIndex = subject.indexOf('/', startIndex);
+                    extractedString = subject.slice(startIndex, endIndex);
+                }
+                // Check for []
+                else if(subject.includes('[') && subject.includes(']')) {
+                    startIndex = subject.indexOf('[') + 1;
+                    endIndex = subject.indexOf(']', startIndex);
+                    extractedString = subject.slice(startIndex, endIndex);
+                }
+                // Check for <>
+                else if (subject.includes('<') && subject.includes('>')) {
+                    startIndex = subject.indexOf('<') + 1;
+                    endIndex = subject.indexOf('>', startIndex);
+                    extractedString = subject.slice(startIndex, endIndex);
+                }
+                // If neither is found, return the original subject
+                else {
+                    extractedString = "";
+                }
+
+                return extractedString;
+            }
+        },
+        { field: "Subject", headerName: 'Subject', filter: true, floatingFilter: true,  sortable: true, tooltipField: 'Subject' },
+        { field: "Body", headerName: 'Body', filter: true, floatingFilter: true,  sortable: true, hide: true, tooltipField: 'Body' },
+        { field: "SentTo", headerName: 'Sent To', filter: true, floatingFilter: true,  sortable: true, tooltipField: 'SentTo' },
+        { field: "CcTo", headerName: 'CC To', filter: true, floatingFilter: true,  sortable: true, tooltipField: 'CcTo' },
+        { field: "BccTo", filter: true, floatingFilter: true,  sortable: true, hide: true, tooltipField: 'BccTo' },
+        { field: "Priority", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "Status", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "StatusDate", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "AttachmentPath", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "ActualFileName", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "EncryptedFileName", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "NotificationTemplateID", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "PriceFileHeaderID", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "PriceFileLocationID", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "ResendCount", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "IsActive", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "IsDeleted", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        {
+            field: "CreatedBy", headerName: 'Request Type', maxWidth:120, filter: true, floatingFilter: true, sortable: true, tooltipField: 'CreatedBy', valueGetter: (params) => {
+                if (params.data.CreatedBy.startsWith("API")) {
+                    return "API";
+                } else {
+                    return "Web";
+                }
+            }
+        },
+        { field: "ModifiedBy", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        {
+            field: "CreatedDate", headerName: 'Requested On', filter: true, floatingFilter: true, sortable: true, tooltipField: 'CreatedDate', valueGetter: (params) => {
+                if (params.data.CreatedBy.startsWith("API")) {
+                    return formatDate(params.data.CreatedBy);
+                } else {
+                    return params.data.CreatedDate;
+                }
+            }
+        },
+        { field: "ModifiedDate", filter: true, floatingFilter: true,  sortable: true, hide: true },
+        { field: "Action", filter: true, cellRenderer: resendRenderer,  pinned: 'right', width: 100, headerClass: 'action' }
+
+    ];
+
+    // let the grid know which columns and what data to use { field: "Action", filter: true, cellRenderer: editRenderer, suppressMenu: true, pinned: 'right', width: 100, headerClass: 'action' }
+    const gridOptions = {
+        columnDefs: columnDefs,
+        rowHeight: 30,
+        headerHeight: 30,
+        pagination: true,
+        paginationPageSize: 10,
+        paginationPageSizeSelector: [10, 25, 50, 100],
+        paginationNumberFormatter: function (params) {
+            return '[' + params.value.toLocaleString() + ']';
+        }
+    };
+
+    function formatDate(dateString) {
+        let dateTimeString = dateString.slice(3, 15);
+        return `${dateTimeString.slice(4, 6)}-${dateTimeString.slice(2, 4)}-20${dateTimeString.slice(0, 2)} ${dateTimeString.slice(6, 8)}:${dateTimeString.slice(8, 10)}:${dateTimeString.slice(10, 12)}`;
+    }
+
+
+
+    $(document).ready(function(){
+        $("#processOverlay").css("width", "100%");
+        GetNotificationHistory();
+
+        $("#previewModal").modal({
+            show: false,
+            backdrop: 'static'
+        });
+
+        $("#reSendConfirmationModal").modal({
+            show: false,
+            backdrop: 'static'
+        });
+        
+        function GetNotificationHistory() {
+            $.ajax({
+                type: 'Get',
+                url: '@Url.Action("GetNotificationHistory", "Notification")',
+                datatype: JSON,
+                success: function (data) {
+                    for (let i = 0; i < data.length; i++) {
+                        data[i].NotificationDate = moment(data[i].NotificationDate).format("DD-MM-YYYY HH:mm:ss");
+                        data[i].CreatedDate = moment(data[i].CreatedDate).format("DD-MM-YYYY HH:mm:ss");
+                        //var htmlString = data[i].Body;
+                        //var bodyDiv = document.createElement('div');
+                        //bodyDiv.innerHTML = htmlString
+                        //var textString = $(bodyDiv).html(htmlString).text();
+                        //data[i].Body = textString;
+                    }
+                    $("#processOverlay").css("width", "100%");
+                    LoadNotificationData(data);
+                    
+                },
+                error: function (data) {
+                    $("#processOverlay").css("width", "0%");
+                    console.log(data);
+                    $("#RelanchModal").modal('show');
+                }
+            });
+        }
+
+        // Load AG-GRID
+        function LoadNotificationData(data) {
+            // gridOptions.api.setRowData(data);
+            // gridOptions.columnApi.autoSizeAllColumns();
+            // setTimeout(function () {
+            //     gridOptions.api.sizeColumnsToFit();
+            // });
+            gridApi.setGridOption("rowData", data);
+            gridApi.sizeColumnsToFit();
+            $("#processOverlay").css("width", "0%");
+        }
+
+        //Bind AG-Grid
+        var eGridDiv = document.querySelector('#NotifiHistoryGrid');
+        // new agGrid.Grid(eGridDiv, gridOptions);
+        gridApi = agGrid.createGrid(eGridDiv, gridOptions);
+    });
+
+
+
+    function checkIfGeneratedExcelFileExists(data,calledFrom){
+        $.ajax({
+            type : 'Get',
+            url: '@Url.Action("CheckIfGeneratedExcelFileExists" , "Notification")',
+            data : {
+                NotificationHistoryId: data.NotificationHistoryID,
+                EncryptedFileName: data.EncryptedFileName,
+                ActualFileName: data.ActualFileName
+            },
+            onLoading: $("#processOverlay").css("width", "100%"),
+            datatype : JSON,
+            success : function(resData){
+                if (resData != null && resData != undefined) {
+                    data.EncryptedFileName = resData.PFCEncryptedFileName;
+                    data.ActualFileName = resData.PFCActualFileName;
+                    if(calledFrom == "preview"){
+                        emailPreview(data);
+                    }
+                    else{
+                        onReSendClick(data.NotificationHistoryID);
+                    }
+                }else{}
+            },
+            error : function(data){
+                console.log(data);
+            }
+        })
+    }
+
+    function onReSendClick(notificationId) {
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("ReSendNotification", "Notification")',
+            data: { notificationId: notificationId },
+            onLoading: $("#processOverlay").css("width", "100%"),
+            success: function (data) {
+                if (data == true) {
+                    $("#resendNotiySuccess").modal('show');
+                } else {
+                    $('#resendNotiyFailed').modal('show');
+                }
+                $('#previewModal').modal('hide');
+                $("#processOverlay").css("width", "0%");
+            },
+            error: function (data) {
+                $("#processOverlay").css("width", "0%");
+                console.log(data);
+                $("#RelanchModal").modal('show');
+            }
+        });
+    }
+
+    function emailPreview(data) {
+        $('#commonMsg_attachment').empty();
+        $('#commonMsg_attachment').html('<strong>Attachment: </strong>');
+        $('#commonMsg_notificationID').val(data.NotificationHistoryID)
+        $('#commonMsg_SentOn').html('<strong>Sent: </strong>' + data.NotificationDate);
+        $('#commonMsg_To').html('<strong>To: </strong>' + data.SentTo);
+        $('#commonMsg_cc').html('<strong>Cc: </strong>' + data.CcTo);
+        $('#commonMsg_Subject').html('<strong>Subject: </strong>' + data.Subject);
+        var fileName = data.ActualFileName;
+        var anchorTag = $('<button></button>');
+        anchorTag.text(fileName);
+        $('#commonMsg_attachment').append(anchorTag);
+        var htmlString = data.Body;
+        htmlString = htmlString.replace(/<br\/?>/g, "<br>");
+        $('#commonMsg_Body').html(htmlString);
+        $('#commonMsg_actualFileName').val(data.ActualFileName);
+        $('#commonMsg_encryptedFileName').val(data.EncryptedFileName);
+        $('#commonMsg_pricefileHeaderID').val(data.PriceFileHeaderID)
+        $('#previewModal').modal('show');
+        $("#processOverlay").css("width", "0%")
+        if (data.CreatedBy.startsWith("API")) {
+            $("#modalSendBtn").hide();
+        }
+        else {
+            $("#modalSendBtn").show();
+        }
+    };
+
+    $('#modalSendBtn').click(function(){
+        $('#previewModal').modal('hide');
+        $("#processOverlay").css("width", "100%");
+        onReSendClick($('#commonMsg_notificationID').val());
+    })
+
+    $('#commonMsg_attachment').click(function(){
+        var PFCEncryptedFileName = $('#commonMsg_encryptedFileName').val();
+        var PFCActualFileName = $('#commonMsg_actualFileName').val();
+        var PFCNotificationHistoryID = $('#commonMsg_notificationID').val();
+        DownloadFile(PFCEncryptedFileName, PFCActualFileName, PFCNotificationHistoryID)
+    });
+
+    function DownloadFile(PFCEncryptedFileName, PFCActualFileName, PFCNotificationHistoryID) {
+        window.location.href = "@Url.RouteUrl(new { Controller = "Notification", Action = "DownloadFile" })/?EncryptedFileName=" + PFCEncryptedFileName + "&ActualFileName=" + PFCActualFileName + "&NotificationHistoryId=" + PFCNotificationHistoryID;
+    }
+
+    function viewResendConfirmation(data){
+        SelectedRowdata = data;
+        $("#reSendConfirmationModal").modal('show');
+    }
+
+    $("#reSendYes").click(function () {
+        $("#reSendConfirmationModal").modal('hide');
+        $("#processOverlay").css("width", "100%");
+        checkIfGeneratedExcelFileExists(SelectedRowdata, 'sent');
+    });
+
+
+
+
+   
+
+    
+</script>
+

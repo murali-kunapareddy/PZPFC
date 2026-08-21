@@ -1,0 +1,12 @@
+version: 0.0
+os: windows
+files:
+  - source: \.
+    destination: C:\inetpub\wwwroot\PZPFC.SE.COM
+file_exists_behavior: OVERWRITE
+
+hooks:
+  BeforeInstall:
+    - location: \Scripts\stop-iis-website.ps1
+  AfterInstall:
+    - location: \Scripts\start-iis-website.ps1

@@ -1,0 +1,147 @@
+﻿@using PFCWebAPP.Repositories.Configure.Models;
+@model TemplateModel
+
+<div class="container" id="divTemplateDetails">
+    <div class="row">
+        <div class="col-md-4">
+            <label class="mb-2" style="font-size: 15px;font-weight: 600;">Select Master</label>
+            @Html.DropDownListFor(m => m.SelectedTemplateMasterID, new SelectList(Model.ddlTemplateMasterDetails, "TemplateMasterID", "TemplateName"), "[Choose Template]", new { @class = "form-select", @id = "ddlTemplateMasterID" })
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-primary mt-4" id="masterDataDownloadBtn">Download</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+ <div class="row">
+        <div class="col-lg-12 month-data" id="innerdiv">
+            @Html.Partial("_GetTemplateDetailsByID",Model)
+            @*<div id="myModal" style="overflow:auto;">
+                <div>
+                    <div id="msg"><img src="~/images/DisplayLoading.gif" /> <h1>Please wait.. Loading data</h1></div>
+                </div>
+            </div>*@
+        </div>
+    </div>
+</div>
+
+<div id="processOverlay2" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    
+    $(document).ready(function () {
+        //$('#msg').hide();
+        $("#masterDataDownloadBtn").attr('disabled', true);
+        $('#processOverlay2').css("width" , "0%");
+        $('#ddlTemplateMasterID').change(function () {
+            SetButtonStatus();
+            GetTemplateDetailsByID();
+        });
+
+        $("#btnView").click(function () {
+        });
+
+        function SetButtonStatus() {
+            var x = $('#ddlTemplateMasterID').find('option:selected').text();
+
+            if (x != "[Choose Template]") {
+                $('input[type=button][name=btnView]').removeAttr("disabled");
+                $("#masterDataDownloadBtn").attr('disabled', false);
+            }
+            else {
+                $('input[type=button]').attr("disabled", "disabled");
+                $("#masterDataDownloadBtn").attr('disabled', true);
+            }
+        }
+
+
+
+
+
+        function GetTemplateDetailsByID() {
+            var SelectedTemplateMasterID = "";
+            SelectedTemplateMasterID = $("#ddlTemplateMasterID").val()
+
+            //alert('SelectedTemplateMasterID-' + SelectedTemplateMasterID)
+
+            $.ajax({
+                url: '@Url.Action("_GetTemplateDetailsByID", "Configure")',
+                type: "GET",
+                async: true,
+                data: {
+                    TemplateMasterID: SelectedTemplateMasterID
+                },
+                beforeSend: function () {
+                    //$('#msg').show();
+                    $('#processOverlay2').css("width", "100%");
+                    $('#divTemplateDetails').addClass("disabled");
+
+                },
+                //onLoading: $('#processOverlay2').css("width", "100%"),
+                //$('#msg').show(),
+                success: function (response, status, xhr) {
+                    /*alert(response);*/
+                    $("#innerdiv").html(response);
+                    $("#innerdiv").show();
+                    $('input[type=button][name=btnUpdate]').removeAttr("disabled");
+
+                    //$('#msg').hide();
+                    $('#processOverlay2').css("width", "0%");
+                    $('#divTemplateDetails').removeClass("disabled");
+
+
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //$('#msg').hide();
+                    $('#processOverlay2').css("width", "0%");
+                    $('#divTemplateDetails').removeClass("disabled");
+
+                    //alert("Error - innerdiv" + XMLHttpRequest + errorThrown);
+                    $('input[type=button]').attr("disabled", "disabled");
+                    //location.reload(true);
+                    $("#RelanchModal").modal('show');
+                }
+            });
+
+        }
+
+
+    });
+
+
+    $("#masterDataDownloadBtn").click(function () {
+        $("#masterDataDownloadBtn").attr('disabled', true);
+        var selectedTemplateId = $("#ddlTemplateMasterID option:selected").val();
+        var TemplateName = $("#ddlTemplateMasterID option:selected").text().split('-')[0];
+        downalodTemplateParams = {
+            TemplateMasterID: selectedTemplateId, TemplateName: TemplateName
+        };
+        $("#processOverlay2").css("width", "100%");
+        DownloadMasterTemplate(downalodTemplateParams);
+    });
+
+    function DownloadMasterTemplate(data) {
+        var recordsCount = $("#dataTablerecordsCount").text();
+        var multiplicationValue = Math.floor(recordsCount / 10000);
+        var timeOutValue = 3;
+        if (multiplicationValue > 1) {
+            timeOutValue = multiplicationValue * timeOutValue;
+        }
+        window.location.href = "@Url.RouteUrl(new { Controller = "Configure", Action = "Export" })/?TemplateMasterID=" + data.TemplateMasterID + "&TemplateName=" + data.TemplateName;
+        setTimeout(function () {
+            $("#processOverlay2").css("width", "0%");
+        }, timeOutValue * 1000);
+        $("#masterDataDownloadBtn").attr('disabled', false);
+    }
+
+
+
+</script>

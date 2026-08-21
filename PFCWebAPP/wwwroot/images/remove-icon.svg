@@ -1,0 +1,9 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30">
+	<title>icons8-cross-30</title>
+	<defs>
+		<image  width="19" height="18" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAASCAMAAACO0hVbAAAAAXNSR0IB2cksfwAAAE5QTFRFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxKKmWQAAABp0Uk5TAFXs5VBR5+tUAf/7V+noUvxcW0/j4ube305eU9QYAAAAeElEQVR4nG2QWRKAIAxD4wq2uCIu97+ogArIyFfmTUPSAkVZ1QivaYVEJ4hYvUgxkQB6itAhGoCRA/SIR6ukU9MMFF4s3vHAFL0epjTtnkynIvyg+3sflKEP/Ml4SoSeSKpGqPPdNLDmNzDAlt9qs16z69hKH+a8APP5CR+ryhrAAAAAAElFTkSuQmCC"/>
+	</defs>
+	<style>
+	</style>
+	<use id="Background" href="#img1" x="5" y="6"/>
+</svg>

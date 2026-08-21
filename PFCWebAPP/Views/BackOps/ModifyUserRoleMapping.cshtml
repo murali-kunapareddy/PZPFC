@@ -1,0 +1,69 @@
+﻿@{
+    ViewBag.Title = "Modify User RoleMapping";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model PFCWebAPP.Repositories.BackOps.Models.UserRoleMappingViewModel
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="~/BackOps/UserRoleMapping">UserRole Mapping </a></li>
+        <li class="breadcrumb-item active" aria-current="page">Update - UserSESA: @Model.UserSESA</li>
+    </ol>
+</nav>
+<br />
+
+
+
+@using (Html.BeginForm("ModifyUserRoleMapping", "BackOps", FormMethod.Post, new { @class = "form-horizontal", role = "form", @id = "ModifyUserRoleMapping" }))
+{
+    @Html.AntiForgeryToken()
+
+
+    <div class="row">
+        <div>
+
+            @*<label for="UserSESA">UserSESA(@Model.UserSESA)</label>*@
+            @Html.HiddenFor(m => m.UserSESA)
+            <table class="table table-borderless table-marginless">
+                <tbody>
+                    @for (int i = 0; i < Model.lstUserRoleMappingModel.Count; i++)
+                    {
+                        <tr>
+                            @Html.HiddenFor(modelItem => Model.lstUserRoleMappingModel[i].RoleID)
+                            @Html.HiddenFor(modelItem => Model.lstUserRoleMappingModel[i].RoleName)
+                            @Html.HiddenFor(modelItem => Model.lstUserRoleMappingModel[i].UserRoleMappingID)
+                            <th width="15%" class="text-right"><b><label for="RoleName">@Model.lstUserRoleMappingModel[i].RoleName</label></b></th>
+                            <td>
+                                @Html.CheckBoxFor(modelItem => Model.lstUserRoleMappingModel[i].UserRoleMappingStatus, new { @id = "UserRoleMappingStatus" })
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+
+        </div>
+
+
+        <div class="form-footer">
+            <ul class="list-inline">
+
+                <li class="list-inline-item">
+                    <input class="btn btn-primary" type="submit" name="button" value="Update" id="btnSave" />
+
+                </li>
+            </ul>
+        </div>
+    </div>
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#btnSave").removeClass("disabled");
+        $("#btnSave").click(function () {
+            $("#btnSave").addClass("disabled");
+        });
+    });
+</script>
+

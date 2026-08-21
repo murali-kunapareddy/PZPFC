@@ -1,0 +1,74 @@
+﻿
+@{
+    ViewBag.Title = "Roles";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Roles</h2>
+
+<div class="row">
+    <div id="RoleGrid" style="height: 420px; width:100%;" class="ag-theme-alpine"></div>
+</div>
+
+<div id="processOverlay" class="overlay">
+    <div class="text-hole-center">
+        <img src="~/images/loadingcircle.gif" class="center-img" style="width:100px;height:100px" />
+    </div>
+</div>
+
+<script type="text/javascript">
+    let gridApi;
+    $(document).ready(function () {
+        $("#processOverlay").css("width" , "100%");
+        //Column Declaration
+        const columnDefs = [
+            { field: "RoleID", filter: true, floatingFilter: true, hide: true, sortable: true },
+            { field: "RoleName", filter: true, floatingFilter: true, sortable: true },
+            { field: "IsActive", filter: true, floatingFilter: true}
+        ];
+
+        // let the grid know which columns and what data to use
+        const gridOptions = {
+            columnDefs: columnDefs,
+            rowHeight: 30,
+            headerHeight: 30,
+            pagination: false,
+            paginationPageSize: 10
+        };
+
+        $.ajax({
+            type: 'Post',
+            url: '@Url.Action("GetRoles", "BackOps")',
+            data: {},
+            datatype: JSON,
+            success: function (data) { LoadRoleGrid(data);
+                $("#processOverlay").css("width", "0%");
+            },
+            error: function (data) { 
+                //alert(data);
+                $("#processOverlay").css("width", "0%");
+                console.log(data);
+                //location.reload(true);
+                $("#RelanchModal").modal('show');
+            }
+        });
+
+
+        // Load AG-GRID
+        function LoadRoleGrid(data) {
+            //gridOptions.api.setRowData(data);            
+            //gridOptions.api.sizeColumnsToFit();
+            gridApi.setGridOption("rowData", data);
+            gridApi.sizeColumnsToFit();
+            /*            gridOptions.columnApi.autoSizeAllColumns();*/
+        }
+
+        //Bind AG-Grid
+        var eGridDiv = document.querySelector('#RoleGrid');
+        //new agGrid.Grid(eGridDiv, gridOptions);
+        gridApi = agGrid.createGrid(eGridDiv, gridOptions);
+        
+    });
+
+
+</script>
